@@ -1,0 +1,33 @@
+{
+  "name": "react-i18n-interpolation",
+  "version": "1.0.0",
+  "description": "String interpolation of translated text and react components",
+  "main": "index.js",
+  "dependencies": {
+    "eslint-config-airbnb": "14.1.0"
+  },
+  "devDependencies": {
+    "eslint": "3.16.1",
+    "eslint-plugin-import": "2.2.0",
+    "eslint-plugin-react": "6.10.0",
+    "eslint-plugin-jsx-a11y": "4.0.0"
+  },
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bholloway/react-i18n-interpolation.git"
+  },
+  "keywords": [
+    "react",
+    "i18n",
+    "gettext",
+    "template",
+    "string",
+    "interpolation"
+  ],
+  "author": "bholloway",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bholloway/react-i18n-interpolation/issues"
+  }
+}
