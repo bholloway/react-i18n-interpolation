@@ -62,13 +62,14 @@ Setup in your application.
 
 ```javascript
 import NodeGettext from 'node-gettext';
-import {i18n} from 'react-i18-interpolation';
+import {gettextFactory, ngettextFactory} from 'react-i18-interpolation';
 
 const nodeGettext = new NodeGettext();
 nodeGettext.addTextdomain(...);
 nodeGettext.textdomain(...);
   
-const {gettext, ngettext} = i18n(nodeGettext.gettext);
+const gettext = gettextFactory(nodeGettext.gettext);
+const ngettext = ngettextFactory(nodeGettext.gettext);
 ```
 
 We recommend you distribute these method(s) to components by `redux`, or failing that but `context`. Using `redux` allows your UI to respond to changes in text domain real-time.
@@ -79,7 +80,7 @@ We recommend you distribute these method(s) to components by `redux`, or failing
 Then as a component, here is our paginator example.
 
 ```javascript
-import {defaultGettext} from 'react-i18-interpolation';
+import {gettextDefault} from 'react-i18-interpolation';
 
 export const Paginator = ({numMore, onMore, numLess, onLess, gettext}) => (
   <span>
@@ -95,7 +96,7 @@ Paginator.propTypes = {
 };
 
 Paginator.defaultProps = {
-  gettext: defaultGettext
+  gettext: gettextDefault
 };
 ```
 

@@ -16,12 +16,13 @@ import {calculateDelimiters} from './lib/delimited';
  * @param {function} [translate] Optional translation function, required for translation to occur
  * @returns {function(array, ...string):array|string} Template string interpolator
  */
-export const gettext = translate => (strings, ...substitutions) => {
+export const gettextFactory = translate => (strings, ...substitutions) => {
   const {keys, untranslated} = getTemplate(strings, substitutions);
   const translated = (typeof translate === 'function') ? translate(untranslated) : untranslated;
   const {substituted, isText} = makeSubstitutions({text: translated, keys, substitutions});
   return isText ? substituted.join('') : substituted;
 };
+
 
 /**
  * NGettext as a tagged template string interpolator.
@@ -46,7 +47,7 @@ export const gettext = translate => (strings, ...substitutions) => {
  * @param {function} [translate] Optional translation function, required for translation to occur
  * @returns {function(function|number):function} Factory for a template string interpolator
  */
-export const ngettext = translate => condition => (strings, ...substitutions) => {
+export const ngettextFactory = translate => condition => (strings, ...substitutions) => {
   const isConditionFn = (typeof condition === 'function');
 
   // get a template where react component keys determine the substitution tags
@@ -80,14 +81,16 @@ export const ngettext = translate => condition => (strings, ...substitutions) =>
   return isText ? substituted.join('') : substituted;
 };
 
-/**
- * Get both gettext and ngettext in an object.
- * @param {function} [translate] Optional translation function, required for translation to occur
- * @returns {{gettext:function, ngettext:function}} Hash of methods
- */
-export const i18n = translate => ({
-  gettext: gettext(translate),
-  ngettext: ngettext(translate)
-});
 
-export const defaultGettext = gettext();
+/**
+ * Gettext as a degenerate template string interpolator.
+ * @type {*}
+ */
+export const gettextDefault = gettextFactory();
+
+
+/**
+ * NGettext as a degenerate template string interpolator.
+ * @type {*}
+ */
+export const ngettextDefault = ngettextFactory();
