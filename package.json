@@ -1,6 +1,6 @@
 {
   "name": "react-i18n-interpolation",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "String interpolation of translated text and react components",
   "main": "index.js",
   "dependencies": {
