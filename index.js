@@ -1,3 +1,4 @@
+import {defaultToToken, defaultChoose} from './lib/defaults';
 import {getTemplate, makeSubstitutions} from './lib/template';
 import {calculateDelimiters} from './lib/delimited';
 
@@ -5,21 +6,28 @@ import {calculateDelimiters} from './lib/delimited';
 /**
  * Gettext as a tagged template string interpolator.
  *
- * For the interpolator, substitutions should be plain text or React elements with a string `key`.
+ * For the interpolator, substitutions should be objects with a single key-value pair. The key
+ * gives the `key` and `name` for the token and the `value` gives the value.
+ *
  * Where all `substitutions` are `string` then a `string` is returned. Otherwise an `Array` is
- * returned.
+ * returned. This allows React elements as substitutions. Elements must have an explicit `key` or
+ * they will be assigned one automatically.
  *
- * The entire template is translated and substitutions will be named per the React elements.
+ * Failure to pass a `translate` function will not result in an error, but no translation will
+ * occur.
  *
- * Failure to pass a `translate` function will result in no translation but no error will occur.
- *
- * @param {function} [translate] Optional translation function, required for translation to occur
+ * @param {function} [gettext] Optional translation function, required for translation to occur
+ * @param {function} [toToken] Optional custom token inference function, yeilds {name, key, value}
  * @returns {function(array, ...string):array|string} Template string interpolator
  */
-export const gettextFactory = translate => (strings, ...substitutions) => {
-  const {keys, untranslated} = getTemplate(strings, substitutions);
-  const translated = (typeof translate === 'function') ? translate(untranslated) : untranslated;
-  const {substituted, isText} = makeSubstitutions({text: translated, keys, substitutions});
+export const gettextFactory = ({
+  gettext = x => x,
+  toToken = defaultToToken
+} = {}) => (strings, ...substitutions) => {
+  const tokens = substitutions.map(toToken);
+  const {names, values, msgid} = getTemplate(strings, tokens);
+  const msgstr = gettext(msgid);
+  const {substituted, isText} = makeSubstitutions({msgstr, names, values});
   return isText ? substituted.join('') : substituted;
 };
 
@@ -27,58 +35,65 @@ export const gettextFactory = translate => (strings, ...substitutions) => {
 /**
  * NGettext as a tagged template string interpolator.
  *
- * The function must be closed with a `condition` value in order to create an interpolator. Normally
- * this `condition` would be a number that indicates singular (condition === 1) or plural otherwise.
+ * The function is a factory and must be closed with a `quantity` value in order to create an
+ * interpolator. Normally this `quantity` would be a number that indicates singular (quantity === 1)
+ * or plural otherwise.
  *
- * Singular and plural text are contained in the same template and delimited by a pipe `|`
- * character. The entire template is translated before the singular or plural is chosen.
- * There must be exactly one pipe in the template. Substitutions will be named per React element
- * `keys.
+ * For the interpolator, substitutions should be objects with a single key-value pair. The key
+ * gives the `key` and `name` for the token and the `value` gives the value.
  *
- * The `condition` may alternatively be a function of the untranslated and translated template text
- * `function(string, string):number`. In this case there can be any number of delimiters.
+ * Singular and plural forms are contained in the same template and delimited by `delimiter`, by
+ * default this is the pipe `|` character. The entire template is translated before the singular or
+ * plural form is chosen.
  *
- * For the interpolator, substitutions should be plain text or React elements with a string `key`.
+ * Under normal conditions there must be exactly one delimiter in the template. However a custom
+ * `choose` method allows any number of delimited forms, and any mapping between factory arguments
+ * and the selected form.
+ *
  * Where all `substitutions` are `string` then a `string` is returned. Otherwise an `Array` is
- * returned.
+ * returned. This allows React elements as substitutions. Elements must have an explicit `key` or
+ * they will be assigned one automatically.
  *
- * Failure to pass a `translate` function will result in no translation but no error will occur.
+ * Failure to pass a `translate` function will not result in an error, but no translation will
+ * occur.
  *
- * @param {function} [translate] Optional translation function, required for translation to occur
- * @returns {function(function|number):function} Factory for a template string interpolator
+ * @param {function} [ngettext] Optional translation function, required for translation to occur
+ * @param {function} [toToken] Optional custom token inference function, yeilds {name, key, value}
+ * @param {function} [choose] Optional custom choose based on quantity
+ * @param {string} [delimiter] Optional custom delimiter character
+ * @returns {function():function} Factory for a template string interpolator
  */
-export const ngettextFactory = translate => condition => (strings, ...substitutions) => {
-  const isConditionFn = (typeof condition === 'function');
+export const ngettextFactory = ({
+  ngettext = x => x,
+  toToken = defaultToToken,
+  choose = defaultChoose,
+  delimiter = '|'
+} = {}) => {
+  const calc = calculateDelimiters(delimiter);
 
-  // get a template where react component keys determine the substitution tags
-  const {keys, untranslated} = getTemplate(strings, substitutions);
+  return (...quantity) => (strings, ...substitutions) => {
+    // construct a template with name->value tokens
+    const tokens = substitutions.map(toToken);
+    const {names, values, msgid} = getTemplate(strings, tokens);
 
-  // translate
-  const translated = (typeof translate === 'function') ? translate(untranslated) : untranslated;
+    // translate
+    const msgstr = ngettext(msgid/*, ...TBD*/);
 
-  // process and validate delimiters
-  const {lengthUntranslated, lengthTranslated, collated} =
-    calculateDelimiters({delimiter: '|', strings, translated, keys, substitutions});
+    // process delimiters
+    const {lengthUntranslated, lengthTranslated, groups} = calc({strings, msgstr, names, values});
 
-  if (lengthUntranslated !== lengthTranslated) {
-    throw new Error('ngettext : translation does not preserve the number of pipe "|" characters');
-  } else if (lengthUntranslated === 1) {
-    throw new Error('ngettext : must contain a pipe "|" character');
-  } else if (!isConditionFn && (lengthUntranslated > 2)) {
-    throw new Error(
-      `ngettext : number condition implies 1 pipe "|" character, saw ${lengthUntranslated - 1}`
-    );
-  }
+    // ensure translation preserves delimiters
+    if (lengthUntranslated !== lengthTranslated) {
+      throw new Error('ngettext : translation must preserve all delimiter characters');
+    } else if (lengthUntranslated < 2) {
+      throw new Error(`ngettext : must contain a delimiter character "${delimiter}"`);
+    }
 
-  // calculate and validate index
-  const index = isConditionFn ? condition(untranslated, translated) : Number(condition !== 1);
-  if (!(index in collated)) {
-    throw new Error('ngettext : condition must evaluate to an integer within template bounds');
-  }
-
-  // evaluate just the singular or plural
-  const {substituted, isText} = makeSubstitutions(collated[index]);
-  return isText ? substituted.join('') : substituted;
+    // evaluate just the singular or plural
+    const chosen = choose(groups, ...quantity);
+    const {substituted, isText} = makeSubstitutions(chosen);
+    return isText ? substituted.join('') : substituted;
+  };
 };
 
 

@@ -5,6 +5,10 @@
   "main": "index.js",
   "dependencies": {
   },
+  "peerDependencies": {
+    "babel-preset-react-app": "2.1.1",
+    "react": "^15.0.0"
+  },
   "devDependencies": {
     "eslint": "3.16.1",
     "eslint-config-airbnb": "14.1.0",
