@@ -2,17 +2,23 @@
   "name": "react-i18n-interpolation",
   "version": "0.0.3",
   "description": "String interpolation of translated text and react components",
-  "main": "index.js",
-  "dependencies": {
+  "main": "lib/index.js",
+  "dependencies": {},
+  "peerDependencies": {
+    "react": "^15.0.0"
   },
   "devDependencies": {
+    "babel-cli": "6.23.0",
+    "babel-preset-react-app": "2.1.1",
     "eslint": "3.16.1",
     "eslint-config-airbnb": "14.1.0",
     "eslint-plugin-import": "2.2.0",
-    "eslint-plugin-react": "6.10.0",
-    "eslint-plugin-jsx-a11y": "4.0.0"
+    "eslint-plugin-jsx-a11y": "4.0.0",
+    "eslint-plugin-react": "6.10.0"
   },
-  "scripts": {},
+  "scripts": {
+    "prepublish": "NODE_ENV=production babel src --out-dir lib"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bholloway/react-i18n-interpolation.git"
@@ -29,5 +35,10 @@
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/bholloway/react-i18n-interpolation/issues"
-  }
+  },
+  "files": [
+    "README.md",
+    "lib",
+    "src"
+  ]
 }

@@ -8,22 +8,69 @@ Intended for [gettext](https://www.npmjs.com/search?q=gettext) or similar transl
 
 ### Tagged Template Literals
 
-This library provides custom [Tagged Template Literals](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Template_literals#Tagged_template_literals) interpolation functions.
+This library leverages [Tagged Template Literals](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Template_literals#Tagged_template_literals) interpolation functions.
 
+Template Literals allow **substitutions**.
+
+Normally, substitutions are passed **by value**. And such a function would look like this.
+
+**(BAD)**
 ```javascript
-tag = (template, ...substitutions) => ...
+const tag = (template, ...substitutions) => ...
+const substitution = 10;
 
 tag`Some statement that can use ${substitution}`
+// => Some statement that can use 10
 ```
 
-Template Literals allow **substitutions**. These will appear as wildcards in the untranslated text.
+In this form we are not able to infer a sensible **token name**.
+
+Presuming we use the substitution index we would be left with a translation like this.
 
 ```
-msgid "Some statement that can use ____"
+msgid "Some statement that can use __0__"
 msgstr ...
 ```
 
-### React
+Obviously `__0__` is **not** a good placeholder. We need something more descriptive.
+
+We need to be equally explicit about the **token name** and **token value**.
+
+**(GOOD)**
+
+```javascript
+tag`Some statement that can use ${{num: substitution}}`
+// => Some statement that can use 10
+```
+
+We provide an `object` with single key-value and achieve a translation like this.
+
+```
+msgid "Some statement that can use __num__"
+msgstr ...
+```
+
+While this may feel a little contrived we feel it is the most explicit solution.
+
+### with plain values
+
+By default we require that all substitutions be object key-value as shown above.
+
+Any substitution passed **by value** will be treated like a normal Template Literal and will **appear in your translation**.
+
+```
+const substitution = 'foo';
+tag`Some simple ${substitution}`
+```
+
+Results in:
+
+```
+msgid "Some simple foo"
+msgstr ...
+```
+
+### with React
 
 Consider a React `Paginator` component where `More` and `Less` anchors will allow more or fewer results to be shown.
 
@@ -38,23 +85,21 @@ In a perfect world we could use a **Tagged Template Literal** to compose idiomat
 ```
 <span>
   {tag`Show
-    ${<More key="more" {...{numMore, onMore}} />} or
-    ${<Less key="less" {...{numLess, onLess}} />}`}
+    ${{more: <More {...{numMore, onMore}} />} or
+    ${{less: <Less {...{numLess, onLess}} />}`}
 </span>
 ```
 
-Presumably we will translate the `<More/>` and `<Less/>` components separately. But we still need the overall translation to look sensible, such as:
+Presumably we will translate the `<More/>` and `<Less/>` components separately. But we will want our translation to still show some context.
 
 ```
 msgid "Show __more__ or __less__"
 msgstr ...
 ```
 
-Happily we can achieve this if we allow our interpolator function to return `Array` in the case that any substitution is non-string (i.e. a React element). React can then treat this array as `{children}`.
+We can achieve this if our interpolator function returns `Array` any time we have one or more non-string **token value**. React will then treat this array as `{children}`.
 
-So long as all substitutions must have a `key` React is happy.
-
-These `key`s futher allow sensible tokens in our translation string. In the example above, the `__more__` and `__less__` tokens come from the respective `key` of the `More` and `Less` elements. 
+So long as all elements have a `key` then React is happy. So we make sure we do this for you under the hood.
 
 ## Usage
 
@@ -84,8 +129,12 @@ const nodeGettext = new NodeGettext();
 nodeGettext.addTextdomain(...);
 nodeGettext.textdomain(...);
   
-const gettext = gettextFactory(nodeGettext.gettext);
-const ngettext = ngettextFactory(nodeGettext.gettext);
+const gettext = gettextFactory({
+  gettext: nodeGettext.gettext
+});
+const ngettext = ngettextFactory({
+  ngettext: nodeGettext.ngettext
+});
 ```
 
 We recommend you distribute these method(s) to components by `redux`, or failing that but `context`. Using `redux` allows your UI to respond to changes in text domain real-time.
@@ -104,6 +153,8 @@ gettext`Some statement`
 ```
 
 #### ngettext
+
+> WORK IN PROGRESS, DO NOT USE
 
 The plural-capable form is `ngettext`.
 
@@ -145,8 +196,8 @@ import {gettextDefault} from 'react-i18-interpolation';
 export const Paginator = ({numMore, onMore, numLess, onLess, gettext}) => (
   <span>
     {gettext`Show
-      ${<More key="more" {...{numMore, onMore}} />} or
-      ${<Less key="less" {...{numLess, onLess}} />}`}
+      ${{more: <More {...{numMore, onMore}} />}} or
+      ${{less: <Less {...{numLess, onLess}} />}}`}
   </span>
 );
 
@@ -171,7 +222,7 @@ import {ngettextDefault} from 'react-i18-interpolation';
 
 export const More = ({numMore, onMore, ngettext}) => (
   <a onClick={onMore}>
-    {ngettext(numMore)`Show one more|Show ${numMore} more`}
+    {ngettext(numMore)`Show one more|Show ${{num: numMore}} more`}
   </a>
 );
 
@@ -185,9 +236,30 @@ More.defaultProps = {
 };
 ```
 
-In this case the substitution is not a React element, so the token will not be descriptive.
+Be careful to avoid your variable name appearing in your translation.
 
 ```
-msgid "Show one more|Show ___ more"
+msgid "Show one more|Show __num__ more"
 msgstr ...
 ```
+
+## Customisation
+
+### `toToken`
+
+`gettext`, `ngettext`
+
+Substitutions are each passed through a `toToken` function which you can override.
+
+This function infers `{name, key, value}` for any given substitution. It also ensures any React element `value` has a valid `key`.
+ 
+By overriding it you can change each substitution token. Such as:
+* Change the `__name__` that appears in the untranslated `msgid` text.
+* Change the `key` that is assigned to React elements.
+* Change the `value` by injecting props, converting text to elements, etc.
+
+### `delimiter`
+
+`ngettext`
+
+Explicitly specify the delimiter character. 

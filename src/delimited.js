@@ -1,5 +1,5 @@
 
-export const calculateDelimiters = ({delimiter, strings, translated, keys, substitutions}) => {
+export const calculateDelimiters = delimiter => ({strings, msgid, names, values}) => {
   // untranslated
   const delimIndices = strings
     .reduce((reduced, v, i) => {
@@ -9,20 +9,20 @@ export const calculateDelimiters = ({delimiter, strings, translated, keys, subst
   const lengthUntranslated = delimIndices.length + 1;
 
   // translated
-  const splitTranslated = translated.split(delimiter);
+  const splitTranslated = msgid.split(delimiter);
   const lengthTranslated = splitTranslated.length;
 
   // collate by delimited text
-  const collated = splitTranslated
-    .map((text, i) => {
+  const groups = splitTranslated
+    .map((element, i) => {
       const start = ((i - 1) in delimIndices) ? delimIndices[i - 1] : 0;
       const end = (i in delimIndices) ? delimIndices[i] : Number.MAX_SAFE_INTEGER;
       return {
-        text,
-        keys: keys.slice(start, end),
-        substitutions: substitutions.slice(start, end)
+        msgid: element,
+        names: names.slice(start, end),
+        values: values.slice(start, end)
       };
     });
 
-  return {lengthUntranslated, lengthTranslated, collated};
+  return {lengthUntranslated, lengthTranslated, groups};
 };
