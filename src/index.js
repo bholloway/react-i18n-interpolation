@@ -1,6 +1,6 @@
-import {defaultToToken, defaultChoose} from './lib/defaults';
-import {getTemplate, makeSubstitutions} from './lib/template';
-import {calculateDelimiters} from './lib/delimited';
+import {defaultToToken, defaultChoose} from './defaults';
+import {getTemplate, makeSubstitutions} from './template';
+import {calculateDelimiters} from './delimited';
 
 
 /**

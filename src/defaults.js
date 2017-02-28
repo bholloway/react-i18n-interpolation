@@ -8,7 +8,7 @@ export const defaultToToken = (candidate, i) => {
 
   // determine key and name
   const key = isValid ? keys[0] : i;
-  const name = `__${key}__`;
+  const name = isValid ? `__${key}__` : String(candidate);
 
   // react elements must have a valid key
   const pending = isValid ? candidate[key] : candidate;

@@ -8,8 +8,13 @@ Intended for [gettext](https://www.npmjs.com/search?q=gettext) or similar transl
 
 ### Tagged Template Literals
 
-This library provides custom [Tagged Template Literals](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Template_literals#Tagged_template_literals) interpolation functions.
+This library leverages [Tagged Template Literals](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Template_literals#Tagged_template_literals) interpolation functions.
 
+Template Literals allow **substitutions**.
+
+Normally, substitutions are passed **by value**. And such a function would look like this.
+
+**(BAD)**
 ```javascript
 const tag = (template, ...substitutions) => ...
 const substitution = 10;
@@ -18,16 +23,54 @@ tag`Some statement that can use ${substitution}`
 // => Some statement that can use 10
 ```
 
-Template Literals allow **substitutions**. These will appear as **tokens** in the untranslated text.
+In this form we are not able to infer a sensible **token name**.
+
+Presuming we use the substitution index we would be left with a translation like this.
 
 ```
-msgid "Some statement that can use ____"
+msgid "Some statement that can use __0__"
 msgstr ...
 ```
 
-Note that since the substitution is the final value we cannot infer any sensible **token name**. We will try to rectify this below.
+Obviously `__0__` is **not** a good placeholder. We need something more descriptive.
 
-### React
+We need to be equally explicit about the **token name** and **token value**.
+
+**(GOOD)**
+
+```javascript
+tag`Some statement that can use ${{num: substitution}}`
+// => Some statement that can use 10
+```
+
+We provide an `object` with single key-value and achieve a translation like this.
+
+```
+msgid "Some statement that can use __num__"
+msgstr ...
+```
+
+While this may feel a little contrived we feel it is the most explicit solution.
+
+### with plain values
+
+By default we require that all substitutions be object key-value as shown above.
+
+Any substitution passed **by value** will be treated like a normal Template Literal and will **appear in your translation**.
+
+```
+const substitution = 'foo';
+tag`Some simple ${substitution}`
+```
+
+Results in:
+
+```
+msgid "Some simple foo"
+msgstr ...
+```
+
+### with React
 
 Consider a React `Paginator` component where `More` and `Less` anchors will allow more or fewer results to be shown.
 
@@ -42,52 +85,21 @@ In a perfect world we could use a **Tagged Template Literal** to compose idiomat
 ```
 <span>
   {tag`Show
-    ${<More key="more" {...{numMore, onMore}} />} or
-    ${<Less key="less" {...{numLess, onLess}} />}`}
+    ${{more: <More {...{numMore, onMore}} />} or
+    ${{less: <Less {...{numLess, onLess}} />}`}
 </span>
 ```
 
-Presumably we will translate the `<More/>` and `<Less/>` components separately. But we still need the overall translation to look sensible, such as:
+Presumably we will translate the `<More/>` and `<Less/>` components separately. But we will want our translation to still show some context.
 
 ```
 msgid "Show __more__ or __less__"
 msgstr ...
 ```
 
-Happily we can achieve this if we allow our interpolator function to return `Array` in the case that any substitution is non-string (i.e. a React element). React can then treat this array as `{children}`.
+We can achieve this if our interpolator function returns `Array` any time we have one or more non-string **token value**. React will then treat this array as `{children}`.
 
-So long as all substitutions must have a `key` React is happy. These `key`s also imply sensible **token names** in our `msgid` translation string. Using the `key` is not a general solution however, as we will see below. 
- 
-### The general case
- 
-Obviously the React element `key` does not help us get a **token name** for non-react substitutions.
-
-Instead, for each substitution we can pass an object with a single entry. The `key` implies the **token name** and `value` implies **token value**.
-
-```javascript
-tag`Some statement that can use ${{quantity: 10}}`
-// => Some statement that can use 10
-```
-
-```
-msgid "Some statement that can use __quantity__"
-msgstr ...
-```
-
-And the same for React components.
-
-
-```html
-<span>
-  {tag`Show
-    ${{more: <More {...{numMore, onMore}} />}} or
-    ${{less: <Less {...{numLess, onLess}} />}}`}
-</span>
-```
-
-This gives us a general solution that works the same for any substitution, React elements included.
-
-Under the hood we ensure the React component has a valid `key` where not already preset. 
+So long as all elements have a `key` then React is happy. So we make sure we do this for you under the hood.
 
 ## Usage
 
@@ -184,8 +196,8 @@ import {gettextDefault} from 'react-i18-interpolation';
 export const Paginator = ({numMore, onMore, numLess, onLess, gettext}) => (
   <span>
     {gettext`Show
-      ${{more: <More key="more" {...{numMore, onMore}} />}} or
-      ${{less: <Less key="less" {...{numLess, onLess}} />}}`}
+      ${{more: <More {...{numMore, onMore}} />}} or
+      ${{less: <Less {...{numLess, onLess}} />}}`}
   </span>
 );
 
@@ -227,7 +239,7 @@ More.defaultProps = {
 Be careful to avoid your variable name appearing in your translation.
 
 ```
-msgid "Show one more|Show ___num__ more"
+msgid "Show one more|Show __num__ more"
 msgstr ...
 ```
 
@@ -241,9 +253,10 @@ Substitutions are each passed through a `toToken` function which you can overrid
 
 This function infers `{name, key, value}` for any given substitution. It also ensures any React element `value` has a valid `key`.
  
-By overriding it you can change each substitution. Including...
-* the token `__name__` that appears in the untranslated `msgid` text.
-* the final `value`, such as implementing raw text as a React element.
+By overriding it you can change each substitution token. Such as:
+* Change the `__name__` that appears in the untranslated `msgid` text.
+* Change the `key` that is assigned to React elements.
+* Change the `value` by injecting props, converting text to elements, etc.
 
 ### `delimiter`
 
