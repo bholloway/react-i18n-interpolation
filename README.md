@@ -142,9 +142,13 @@ We recommend you distribute these method(s) to components by `redux`, or failing
 
 ### API
 
+The API is heavily influenced by [gettext](https://en.wikipedia.org/wiki/Gettext) translation package.
+
+We may make reference to linux documentation and terminology from the GNU implementation.
+
 #### gettext
 
-The simple form is `gettext`.
+The simple interpolator is `gettext`.
 
 It is used directly as a Tag.
 
@@ -152,39 +156,34 @@ It is used directly as a Tag.
 gettext`Some statement`
 ```
 
+It behaves as explained in the [concept section](#concept) above.
+
 #### ngettext
 
-> WORK IN PROGRESS, DO NOT USE
+> Plural forms are grammatical variants depending on the a number. Some languages have two forms, called singular and plural. Other languages have three forms, called singular, dual and plural. There are also languages with four forms.
+> ([linux man-page](https://linux.die.net/man/3/ngettext))
 
-The plural-capable form is `ngettext`.
+The plural-capable interpolator is `ngettext`.
 
-This is a function where the only argument is the `condition`. The result of the function call is used as a Tag.
-
-```javascript
-ngettext(condition)`Singular statement|Plural statement`
+Normally the quantity is the 3rd parameter, meaning:
+ 
+**(Tranditionally)**
+```
+ngettext(singular:string, plural:string, quantity:number)
 ```
 
-Think of the `condition` as the **quantity** in your plural statement.
+For the interpolator we move this `quantity` to a factory function. The result of the function call is used as a Tag.
 
-The template needs to have pipe-delimited `singular|plural` forms. The singular form is used where `condition === 1`, and the plural form is used otherwise.
-
-Substitutions must be made explicitly (the quantity is not added automatically).
-
-There must be exactly one delimiter, and the translation must preserve it, or else an `Error` will be thrown.
-
-#### advanced (generalised) usage
-
-For `ngettext` you may alternatively pass `condition` as a function of the untranslated text `string`. It should return an integer `index`. 
-
+**(Tagged Template Literal)**
 ```javascript
-condition: (untranslated:string) => number
+ngettext(quantity)`Singular statement|Plural statement`
 ```
 
-With a `condition` of this form you are permitted **any number** of pipe-delimited forms in the template. Where only one is selected by the zero-based `index`.
+The template needs to have pipe-delimited `singular|plural` forms.
 
-There must be a sufficient number of delimited forms to satisfy any given `index`, or an (out-of-bounds) `Error` will be thrown.
+Note that the 3 traditional parameters are present and are passed to the underlying `ngettext` implementation you supplied during setup.
 
-The translation must also preserve the number of delimiters or an `Error` will be thrown.
+*We consider only those substitutions which are inherent to the template literal. Your underlying `ngettext` implementation may itself allow substitutions of the `quantity`.*
 
 ## Example
 
@@ -211,9 +210,14 @@ Paginator.defaultProps = {
 };
 ```
 
-Don't be confused by the `react-i18-interpolation` import. This only gives us the default (degenerate) implementation. Which you can choose to omit anyhow.
+And translation.
 
-As stated above, where translation is available it is best distributed through `redux`.
+```
+msgid "Show __more__ or __less__"
+msgstr ...
+```
+
+Don't be confused by the `react-i18-interpolation` import. This only gives us the default (degenerate) implementation. Which you can choose to omit anyhow. As stated above, where translation is available it is best distributed through `redux`.
 
 The `More` and `Less` components will need the plural-capable form `ngettext`.
 
@@ -239,15 +243,27 @@ More.defaultProps = {
 Be careful to avoid your variable name appearing in your translation.
 
 ```
-msgid "Show one more|Show __num__ more"
-msgstr ...
+msgid "Show one more"
+msgid_plural "Show __num__ more"
+msgstr[0] ...
+msgstr[1] ...
 ```
 
 ## Customisation
 
-### `toToken`
+### `gettext`
 
-`gettext`, `ngettext`
+An underlying translation function that follows the signature of [gettext](https://linux.die.net/man/3/gettext). 
+
+### `ngettext`
+
+An underlying translation function that follows the signature of [ngettext](https://linux.die.net/man/3/ngettext). 
+
+### `delimiter`
+
+Explicitly specify the delimiter character that splits singular and plural forms for [ngettext](https://linux.die.net/man/3/ngettext).
+ 
+### `toToken`
 
 Substitutions are each passed through a `toToken` function which you can override.
 
@@ -257,9 +273,3 @@ By overriding it you can change each substitution token. Such as:
 * Change the `__name__` that appears in the untranslated `msgid` text.
 * Change the `key` that is assigned to React elements.
 * Change the `value` by injecting props, converting text to elements, etc.
-
-### `delimiter`
-
-`ngettext`
-
-Explicitly specify the delimiter character. 
