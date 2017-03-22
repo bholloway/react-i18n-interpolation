@@ -17,7 +17,7 @@ export const makeSubstitutions = ({msgstr, names, values}) => {
   const substituted = names
     .reduce((reduced, name, i) => {
       const completed = reduced.slice(0, -1);
-      const split = reduced[reduced.length - 1].split(name);
+      const split = (reduced[reduced.length - 1] || '').split(name);
       const unsplit = split.slice(1).join(name);
       return [...completed, split[0], i, unsplit];
     }, [msgstr])
@@ -25,7 +25,7 @@ export const makeSubstitutions = ({msgstr, names, values}) => {
     .filter(v => (typeof v !== 'string') || v.length);
 
   const isText = substituted
-    .every(v => (typeof v === 'string'));
+    .every(v => ['undefined', 'boolean', 'number', 'string'].includes(typeof v));
 
   return {substituted, isText};
 };

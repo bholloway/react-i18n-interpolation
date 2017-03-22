@@ -3,21 +3,10 @@
   "version": "0.1.0",
   "description": "String interpolation of translated text and react components",
   "main": "lib/index.js",
-  "dependencies": {},
-  "peerDependencies": {
-    "react": "^15.0.0"
-  },
-  "devDependencies": {
-    "babel-cli": "6.23.0",
-    "babel-preset-react-app": "2.1.1",
-    "eslint": "3.16.1",
-    "eslint-config-airbnb": "14.1.0",
-    "eslint-plugin-import": "2.2.0",
-    "eslint-plugin-jsx-a11y": "4.0.0",
-    "eslint-plugin-react": "6.10.0"
-  },
   "scripts": {
-    "prepublish": "NODE_ENV=production babel src --out-dir lib"
+    "prepublish": "NODE_ENV=production babel src --out-dir lib",
+    "test": "NODE_ENV=production tape -r babel-register ./test/**/*-spec.js | tap-diff",
+    "watch-test": "NODE_ENV=production tape-watch -r babel-register -R tape-bdd ./test/**/*-spec.js | tap-diff"
   },
   "repository": {
     "type": "git",
@@ -40,5 +29,24 @@
     "README.md",
     "lib",
     "src"
-  ]
+  ],
+  "dependencies": {},
+  "peerDependencies": {
+    "react": "^15.0.0"
+  },
+  "devDependencies": {
+    "babel-cli": "6.23.0",
+    "babel-preset-react-app": "2.1.1",
+    "babel-register": "6.24.0",
+    "eslint": "3.16.1",
+    "eslint-config-airbnb": "14.1.0",
+    "eslint-plugin-import": "2.2.0",
+    "eslint-plugin-jsx-a11y": "4.0.0",
+    "eslint-plugin-react": "6.10.0",
+    "sinon": "2.1.0",
+    "tap-diff": "0.1.1",
+    "tape": "4.6.3",
+    "tape-bdd": "0.0.1",
+    "tape-watch": "2.3.0"
+  }
 }
