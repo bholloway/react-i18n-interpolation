@@ -14,6 +14,18 @@ export const getTemplate = (strings, tokens) => {
 
 
 export const makeSubstitutions = ({msgstr, names, values}) => {
+  const cast = (v) => {
+    switch (typeof v) {
+      case 'undefined':
+      case 'boolean':
+      case 'number':
+      case 'string':
+        return String(v);
+      default:
+        return v;
+    }
+  };
+
   const substituted = names
     .reduce((reduced, name, i) => {
       const completed = reduced.slice(0, -1);
@@ -24,8 +36,20 @@ export const makeSubstitutions = ({msgstr, names, values}) => {
     .map((v, i) => ((i % 2) ? values[(i - 1) / 2] : v))
     .filter(v => (typeof v !== 'string') || v.length);
 
-  const isText = substituted
-    .every(v => ['undefined', 'boolean', 'number', 'string'].includes(typeof v));
+  const collapsed = substituted
+    .reduceRight((reduced, v) => {
+      const pending = cast(v);
+      if (reduced.length === 0) {
+        return [pending];
+      } else {
+        const [last, ...rest] = reduced;
+        return (typeof pending === 'string') && (typeof last === 'string') ?
+          [`${pending}${last}`, ...rest] :
+          [pending, last, ...rest];
+      }
+    }, []);
 
-  return {substituted, isText};
+  return collapsed.every(v => (typeof v === 'string')) ?
+    collapsed.join('') :
+    collapsed;
 };

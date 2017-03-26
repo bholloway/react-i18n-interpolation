@@ -19,16 +19,15 @@ export const defaultToToken = (candidate, i) => {
   return {name, key, value};
 };
 
-export const defaultChoose = (list, quantity) => {
-  const index = Number(quantity !== 1);
+export const assertTokens = (tokens, message) => {
+  const errors = tokens
+    .filter((token, i, arr) =>
+      arr.slice(i + 1).some(following =>
+        (following.key === token.key) && (following.value !== token.value)
+      ))
+    .map(token => token.key);
 
-  if (list.length > 2) {
-    throw new Error(
-      `ngettext : too many delimiters, expected 1 saw ${list.length - 1}`
-    );
-  } else if (!(index in list)) {
-    throw new Error('ngettext : condition must evaluate to an integer within template bounds');
-  } else {
-    return list[index];
+  if (errors.length) {
+    throw new Error(`${message}: substitution must be unique or have unique key: ${errors}`);
   }
 };

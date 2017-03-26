@@ -1,4 +1,4 @@
-import {defaultToToken, defaultChoose} from './defaults';
+import {defaultToToken, assertTokens} from './token';
 import {getTemplate, makeSubstitutions} from './template';
 import {calculateDelimiters} from './delimited';
 
@@ -26,9 +26,9 @@ export const gettextFactory = ({
 } = {}) => (strings, ...substitutions) => {
   const tokens = substitutions.map(toToken);
   const {names, values, msgid} = getTemplate(strings, tokens);
+  assertTokens(tokens, `Error in gettext(${msgid})`);
   const msgstr = gettext(msgid);
-  const {substituted, isText} = makeSubstitutions({msgstr, names, values});
-  return isText ? substituted.join('') : substituted;
+  return makeSubstitutions({msgstr, names, values});
 };
 
 
@@ -59,25 +59,25 @@ export const gettextFactory = ({
  *
  * @param {function} [ngettext] Optional translation function, required for translation to occur
  * @param {function} [toToken] Optional custom token inference function, yeilds {name, key, value}
- * @param {function} [choose] Optional custom choose based on quantity
  * @param {string} [delimiter] Optional custom delimiter character
  * @returns {function():function} Factory for a template string interpolator
  */
 export const ngettextFactory = ({
   ngettext = x => x,
   toToken = defaultToToken,
-  choose = defaultChoose,
   delimiter = '|'
 } = {}) => {
+  /*
   const calc = calculateDelimiters(delimiter);
 
   return (...quantity) => (strings, ...substitutions) => {
     // construct a template with name->value tokens
     const tokens = substitutions.map(toToken);
+    assertTokens(tokens, `Error in ngettext(${msgid})`);
     const {names, values, msgid} = getTemplate(strings, tokens);
 
     // translate
-    const msgstr = ngettext(msgid/*, ...TBD*/);
+    const msgstr = ngettext(msgid/*, ...TBD*//*);
 
     // process delimiters
     const {lengthUntranslated, lengthTranslated, groups} = calc({strings, msgstr, names, values});
@@ -94,6 +94,7 @@ export const ngettextFactory = ({
     const {substituted, isText} = makeSubstitutions(chosen);
     return isText ? substituted.join('') : substituted;
   };
+  */
 };
 
 

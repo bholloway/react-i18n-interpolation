@@ -1,5 +1,5 @@
 
-export const calculateDelimiters = delimiter => ({strings, msgid, names, values}) => {
+export const calculateDelimiters = delimiter => ({strings, msgstr, names, values}) => {
   // untranslated
   const delimIndices = strings
     .reduce((reduced, v, i) => {
@@ -9,7 +9,7 @@ export const calculateDelimiters = delimiter => ({strings, msgid, names, values}
   const lengthUntranslated = delimIndices.length + 1;
 
   // translated
-  const splitTranslated = msgid.split(delimiter);
+  const splitTranslated = msgstr.split(delimiter);
   const lengthTranslated = splitTranslated.length;
 
   // collate by delimited text
