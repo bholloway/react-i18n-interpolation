@@ -20,16 +20,16 @@ const createSpy = () => {
 };
 
 
-describe('gettext', (unused, describe) => {
+describe('gettext', (it, describe) => {
+
+  it('should behave transparently (by default)', parametric(() => {
+    const template = gettextFactory();
+    return [
+      [template`foo`, 'foo']
+    ];
+  }));
 
   describe('with plain substitution', (it) => {
-
-    it('should allow identity', parametric(() => {
-      const template = gettextFactory();
-      return [
-        [template`foo`, 'foo']
-      ];
-    }));
 
     it('should return string for simple-typed substitutions', parametric(() => {
       const template = gettextFactory();
@@ -54,7 +54,7 @@ describe('gettext', (unused, describe) => {
       ];
     }));
 
-    it('should retain whitespace substitutions (unlike normal template literals)', parametric(() => {
+    it('should retain whitespace substitutions (unlike normal literals)', parametric(() => {
       const template = gettextFactory();
 
       return [
@@ -136,6 +136,12 @@ describe('gettext', (unused, describe) => {
       const template = gettextFactory();
 
       assert.doesNotThrow(() => template`${{a: 'foo'}}${{a: 'foo'}}`);
+    });
+
+    it('should permit duplicate keys in production', (assert) => {
+      const template = gettextFactory({isProduction: true});
+
+      assert.doesNotThrow(() => template`${{a: 'foo'}}${{a: 'bar'}}`);
     });
   });
 
