@@ -249,21 +249,21 @@ msgstr[0] ...
 msgstr[1] ...
 ```
 
-## Customisation
+## Options
 
-### `gettext`
+### `gettext : function`
 
 An underlying translation function that follows the signature of [gettext](https://linux.die.net/man/3/gettext). 
 
-### `ngettext`
+There is a default implementation that does not perform any translation. You will see it if you make use of `gettextDefault`.
+
+### `ngettext : function`
 
 An underlying translation function that follows the signature of [ngettext](https://linux.die.net/man/3/ngettext). 
 
-### `delimiter`
+There is a default implementation that expects exactly 2 plural forms and does not perform any translation. You will see it if you make use of `ngettextDefault`.
 
-Explicitly specify the delimiter character that splits singular and plural forms for [ngettext](https://linux.die.net/man/3/ngettext).
- 
-### `toToken`
+### `toToken : function`
 
 Substitutions are each passed through a `toToken` function which you can override.
 
@@ -273,3 +273,30 @@ By overriding it you can change each substitution token. Such as:
 * Change the `__name__` that appears in the untranslated `msgid` text.
 * Change the `key` that is assigned to React elements.
 * Change the `value` by injecting props, converting text to elements, etc.
+
+### `splitPlural : function`
+
+This merely implements the split of `msgid` for [ngettext](https://linux.die.net/man/3/ngettext).
+
+Here is the default implementation.
+
+```javascript
+const splitPlural = msgid => msgid.split('|');
+splitPlural.expect = 2;
+```
+
+It is clearly rudimentary. It expects exactly 2 plural forms, meaning a single delimiter character in each and every template.
+
+* If you require escaping of the delimiter then you will need to provide a more complex implementation.
+
+* If you omit `expect` count there will be no validation (during development) of the number of delimiters in the template string.
+
+## Environment
+
+### `process.env.NODE_ENV`
+
+The value `"production"` causes error checking to be skipped.
+
+This presumes that you have had sufficient development time to identify any problems in your specific use-case. There will be no validation of the template or of substitutions.
+
+Runtime errors may still result.
