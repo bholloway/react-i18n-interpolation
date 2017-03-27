@@ -139,7 +139,7 @@ describe('gettext', (it, describe) => {
     });
 
     it('should permit duplicate keys in production', (assert) => {
-      const template = gettextFactory({isProduction: true});
+      const template = gettextFactory({NODE_ENV: 'production'});
 
       assert.doesNotThrow(() => template`${{a: 'foo'}}${{a: 'bar'}}`);
     });

@@ -44,7 +44,7 @@ describe('ngettext', (it, describe) => {
   });
 
   it('should permit delimiter count mismatch in production', (assert) => {
-    const template = ngettextFactory({isProduction: true});
+    const template = ngettextFactory({NODE_ENV: 'production'});
 
     assert.doesNotThrow(() => template()`foo`);
   });
@@ -199,7 +199,7 @@ describe('ngettext', (it, describe) => {
     });
 
     it('should permit duplicate keys in production', (assert) => {
-      const template = ngettextFactory({isProduction: true});
+      const template = ngettextFactory({NODE_ENV: 'production'});
 
       assert.doesNotThrow(() => template(1)`${{a: 'foo'}}${{a: 'bar'}}|blit`);
     });

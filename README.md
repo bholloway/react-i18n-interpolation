@@ -249,17 +249,19 @@ msgstr[0] ...
 msgstr[1] ...
 ```
 
-## Customisation
+## Options
 
 ### `gettext : function`
 
 An underlying translation function that follows the signature of [gettext](https://linux.die.net/man/3/gettext). 
 
+There is a default implementation that does not perform any translation. You will see it if you make use of `gettextDefault`.
+
 ### `ngettext : function`
 
 An underlying translation function that follows the signature of [ngettext](https://linux.die.net/man/3/ngettext). 
 
-The default implementation is supports exactly 2 plural forms.
+There is a default implementation that expects exactly 2 plural forms and does not perform any translation. You will see it if you make use of `ngettextDefault`.
 
 ### `toToken : function`
 
@@ -283,14 +285,18 @@ const splitPlural = msgid => msgid.split('|');
 splitPlural.expect = 2;
 ```
 
-If you omit `expect` count there will be no validation (during development) of the number of delimiters in the template string.
+It is clearly rudimentary. It expects exactly 2 plural forms, meaning a single delimiter character in each and every template.
 
-The default implementation is supports exactly 2 plural forms.
+* If you require escaping of the delimiter then you will need to provide a more complex implementation.
 
-### `isProduction : boolean`
+* If you omit `expect` count there will be no validation (during development) of the number of delimiters in the template string.
 
-Causes error checking to be skipped.
+## Environment
+
+### `process.env.NODE_ENV`
+
+The value `"production"` causes error checking to be skipped.
+
+This presumes that you have had sufficient development time to identify any problems in your specific use-case. There will be no validation of the template or of substitutions.
 
 Runtime errors may still result.
-
-This option presumes that you have had sufficient development time to identify any problems in your specific use-case. There will be no validation of the template or of substitutions.
