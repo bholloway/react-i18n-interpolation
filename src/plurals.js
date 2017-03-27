@@ -26,3 +26,14 @@ export const calculateDelimiters = delimiter => ({strings, msgstr, names, values
 
   return {lengthUntranslated, lengthTranslated, groups};
 };
+
+
+export const defaultSplitPlural = msgid => msgid.split('|');
+defaultSplitPlural.expect = 2;
+
+
+export const assertPluralForms = (expected, actual, messagemessage) => {
+  if (!isNaN(expected) && (expected > 0) && (actual !== expected)) {
+    throw new Error(`${message}: expected ${expected} plural forms, saw ${actual}`);
+  }
+};

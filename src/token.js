@@ -1,5 +1,6 @@
 import {isValidElement, cloneElement} from 'react';
 
+
 export const defaultToToken = (candidate, i) => {
   // establish the candidate is valid
   const isObject = !!candidate && (typeof candidate === 'object');
@@ -18,6 +19,7 @@ export const defaultToToken = (candidate, i) => {
 
   return {name, key, value};
 };
+
 
 export const assertTokens = (tokens, message) => {
   const errors = tokens
