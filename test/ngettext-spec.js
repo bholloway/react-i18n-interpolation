@@ -50,10 +50,7 @@ describe('ngettext', (it, describe) => {
   });
 
   describe('plural forms', (it) => {
-    const splitPlural = msgid => msgid.split('|');
-    splitPlural.expect = 3;
-
-    const ngettext = (s, p1, p2, q) => {
+    const ngettext3 = (s, p1, p2, q) => {
       switch (true) {
         case (typeof q !== 'number'):
         case isNaN(q):
@@ -67,7 +64,10 @@ describe('ngettext', (it, describe) => {
     };
 
     it('should support multiple forms', parametric(() => {
-      const template = ngettextFactory({splitPlural, ngettext});
+      const template = ngettextFactory({
+        numPlural: 3,
+        ngettext: ngettext3
+      });
 
       return [
         [template()`singular|plural1|plural2`, 'singular'],
@@ -82,7 +82,10 @@ describe('ngettext', (it, describe) => {
     }));
 
     it('should throw on new delimiter count mismatch', (assert) => {
-      const template = ngettextFactory({splitPlural, ngettext});
+      const template = ngettextFactory({
+        numPlural: 3,
+        ngettext: ngettext3
+      });
 
       assert.throws(() => template()`foo|bar`);
     });
@@ -228,7 +231,7 @@ describe('ngettext', (it, describe) => {
       const element = React.createElement('span', {foo: 'bar'});
       const result = template(1)`foo ${{a: element}}|blit`;
 
-      assert.looseEqual(result[1], {...element, key: 'a'});
+      assert.looseEqual(result[1], {...element, key: 'a-0'});
     });
 
     it('should not overwrite element key', (assert) => {

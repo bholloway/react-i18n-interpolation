@@ -1,6 +1,6 @@
 import {defaultToToken, assertTokens} from './token';
 import {getTemplate, makeSubstitutions} from './template';
-import {defaultSplitPlural, assertPluralForms} from './plurals';
+import {defaultNgettext, defaultSplitPlural, assertPluralForms} from './plurals';
 
 
 /**
@@ -29,7 +29,7 @@ import {defaultSplitPlural, assertPluralForms} from './plurals';
 export const gettextFactory = ({
   gettext = x => x,
   toToken = defaultToToken,
-  NODE_ENV = (process.env || {}).NODE_ENV
+  NODE_ENV = process.env.NODE_ENV
 } = {}) => (strings, ...substitutions) => {
   // get a msgid template with sensible token names
   const tokens = substitutions.map(toToken);
@@ -70,7 +70,8 @@ export const gettextFactory = ({
  *
  * Failure to pass a `ngettext` function will not result in an error, but no translation will
  * occur. This degenerate case supports exactly 2 plural forms which may not suit some developers.
- * If you need more forms for development then pass a custom `splitPlural` implementation.
+ * If you need more forms for development then pass explict `numPlural` and a custom `splitPlural`
+ * implementation.
  *
  * Customisation of the `toToken` function is for advanced users only. Make reference to the source
  * code.
@@ -79,14 +80,16 @@ export const gettextFactory = ({
  * @param {function} [ngettext] Optional translation function, required for translation to occur
  * @param {function} [toToken] Optional custom token inference function, yeilds {name, key, value}
  * @param {function} [splitPlural] Optional split string to plural forms, yeilds Array
+ * @param {Number} [numPlural] Optional expected number of plurals (expected delimiters + 1)
  * @param {string} [NODE_ENV] Reserved for testing
  * @returns {function(quantity:int):function} Factory for a template string interpolator
  */
 export const ngettextFactory = ({
-  ngettext = (s, p, q) => ((typeof q !== 'number') || isNaN(q) || (q === 1) ? s : p),
+  ngettext = defaultNgettext,
   toToken = defaultToToken,
   splitPlural = defaultSplitPlural,
-  NODE_ENV = (process.env || {}).NODE_ENV
+  numPlural = 2,
+  NODE_ENV = process.env.NODE_ENV
 } = {}) => (...quantity) => (strings, ...substitutions) => {
   // get a msgid template with sensible token names and split by the delimiter
   const tokens = substitutions.map(toToken);
@@ -97,7 +100,7 @@ export const ngettextFactory = ({
   if (NODE_ENV !== 'production') {
     const message = `Error in ngettext(${quantity.map(String).join(', ')})\`${msgid}\``;
     assertTokens(tokens, message);
-    assertPluralForms(splitPlural.expect, msgidForms.length, message);
+    assertPluralForms(numPlural, msgidForms.length, message);
   }
 
   // translate and make substitutions

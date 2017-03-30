@@ -267,36 +267,38 @@ There is a default implementation that expects exactly 2 plural forms and does n
 
 Substitutions are each passed through a `toToken` function which you can override.
 
-This function infers `{name, key, value}` for any given substitution. It also ensures any React element `value` has a valid `key`.
+This function infers `{label, name, key, value}` for any given substitution. It also ensures any React element `value` has a valid `key`.
  
 By overriding it you can change each substitution token. Such as:
+* Change the `label` that appears in validation errors
 * Change the `__name__` that appears in the untranslated `msgid` text.
 * Change the `key` that is assigned to React elements.
 * Change the `value` by injecting props, converting text to elements, etc.
 
+Validation of the tokens is made following `toToken`. Tokens may only share `name` or `key` where they have the same `value`. 
+
 ### `splitPlural : function`
 
-This merely implements the split of `msgid` for [ngettext](https://linux.die.net/man/3/ngettext).
+This function implements the split of `msgid` for [ngettext](https://linux.die.net/man/3/ngettext).
 
-Here is the default implementation.
+The default implementation is a rudimentary string split: `msgid => msgid.split('|')`.
 
-```javascript
-const splitPlural = msgid => msgid.split('|');
-splitPlural.expect = 2;
-```
+If you require a different delimiter, or escaping of the delimiter, then you will need to provide a custom implementation.
 
-It is clearly rudimentary. It expects exactly 2 plural forms, meaning a single delimiter character in each and every template.
+### `numPlural : Number`
 
-* If you require escaping of the delimiter then you will need to provide a more complex implementation.
+This validates the template splits into the correct number of plural forms.
 
-* If you omit `expect` count there will be no validation (during development) of the number of delimiters in the template string.
+The default value is `2` matches the default `ngettext` implementation. This means that we expect exactly 2 plural forms, meaning a single delimiter character, in each and every template.
+
+Alternatively, set to `0` or `NaN` (or anything else which satisfieds `isNaN`) to inhibit this check.
 
 ## Environment
 
 ### `process.env.NODE_ENV`
 
-The value `"production"` causes error checking to be skipped.
+The value `"production"` causes validation to be skipped.
 
-This presumes that you have had sufficient development time to identify any problems in your specific use-case. There will be no validation of the template or of substitutions.
+This presumes that you have had sufficient development time to identify any problems in your specific use-case. There will be no checking of the substitutions or of the number of plural forms in the template.
 
 Runtime errors may still result.

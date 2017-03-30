@@ -28,11 +28,15 @@ export const calculateDelimiters = delimiter => ({strings, msgstr, names, values
 };
 
 
-export const defaultSplitPlural = msgid => msgid.split('|');
-defaultSplitPlural.expect = 2;
+export const defaultNgettext = (singular, plural, quantity) =>
+  ((typeof quantity !== 'number') || isNaN(quantity) || (quantity === 1) ? singular : plural);
 
 
-export const assertPluralForms = (expected, actual, messagemessage) => {
+export const defaultSplitPlural = msgid =>
+  msgid.split('|');
+
+
+export const assertPluralForms = (expected, actual, message) => {
   if (!isNaN(expected) && (expected > 0) && (actual !== expected)) {
     throw new Error(`${message}: expected ${expected} plural forms, saw ${actual}`);
   }

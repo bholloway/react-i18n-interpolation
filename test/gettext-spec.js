@@ -168,7 +168,7 @@ describe('gettext', (it, describe) => {
       const element = React.createElement('span', {foo: 'bar'});
       const result = template`foo ${{a: element}}`;
 
-      assert.looseEqual(result[1], {...element, key: 'a'});
+      assert.looseEqual(result[1], {...element, key: 'a-0'});
     });
 
     it('should not overwrite element key', (assert) => {

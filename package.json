@@ -4,7 +4,9 @@
   "description": "String interpolation of translated text and react components",
   "main": "lib/index.js",
   "scripts": {
-    "prepublish": "NODE_ENV=production babel src --out-dir lib && npm run test",
+    "prepublish": "npm run lint && npm run test && npm run build",
+    "lint": "eslint src/** test/**",
+    "build": "NODE_ENV=production babel src --out-dir lib && npm run test",
     "test": "NODE_ENV=test tape -r babel-register ./test/**/*-spec.js | tap-diff",
     "watch-test": "NODE_ENV=test tape-watch -r babel-register -R tape-bdd ./test/**/*-spec.js | tap-diff"
   },
