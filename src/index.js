@@ -1,4 +1,4 @@
-import {defaultToToken, assertTokens} from './token';
+import {defaultToToken, defaultFinaliseToken, assertTokens} from './token';
 import {getTemplate, makeSubstitutions} from './template';
 import {defaultNgettext, defaultSplitPlural, assertPluralForms} from './plurals';
 
@@ -17,23 +17,26 @@ import {defaultNgettext, defaultSplitPlural, assertPluralForms} from './plurals'
  * Failure to pass a `gettext` function will not result in an error, but no translation will
  * occur.
  *
- * Customisation of the `toToken` function is for advanced users only. Make reference to the source
- * code.
+ * Customisation of the `toToken` and `finaliseToken` functions is for advanced users only. Make
+ * reference to the source code.
  *
  * @throws Error On substitutions with duplicate `name`
  * @param {function} [gettext] Optional translation function, required for translation to occur
- * @param {function} [toToken] Optional custom token inference function, yields {name, key, value}
+ * @param {function} [toToken] Optional custom token inference function yields {label, name, value}
+ * @param {function} [finaliseToken] Optional transform of token to final value
  * @param {string} [NODE_ENV] Reserved for testing
  * @returns {function(array, ...string):array|string} Template string interpolator
  */
 export const gettextFactory = ({
   gettext = x => x,
   toToken = defaultToToken,
+  finaliseToken = defaultFinaliseToken,
   NODE_ENV = process.env.NODE_ENV
 } = {}) => (strings, ...substitutions) => {
+
   // get a msgid template with sensible token names
   const tokens = substitutions.map(toToken);
-  const {names, values, msgid} = getTemplate(strings, tokens);
+  const msgid = getTemplate(strings, tokens);
 
   // validate unless production
   if (NODE_ENV !== 'production') {
@@ -42,7 +45,7 @@ export const gettextFactory = ({
 
   // translate and substitute
   const msgstr = gettext(msgid);
-  return makeSubstitutions({msgstr, names, values});
+  return makeSubstitutions({msgstr, tokens, finaliseToken});
 };
 
 
@@ -73,12 +76,13 @@ export const gettextFactory = ({
  * If you need more forms for development then pass explict `numPlural` and a custom `splitPlural`
  * implementation.
  *
- * Customisation of the `toToken` function is for advanced users only. Make reference to the source
- * code.
+ * Customisation of the `toToken` and `finaliseToken` functions is for advanced users only. Make
+ * reference to the source code.
  *
  * @throws Error On substitutions with duplicate `name`, or on insufficent plural forms
  * @param {function} [ngettext] Optional translation function, required for translation to occur
- * @param {function} [toToken] Optional custom token inference function, yeilds {name, key, value}
+ * @param {function} [toToken] Optional custom token inference function yields {label, name, value}
+ * @param {function} [finaliseToken] Optional transform of token to final value
  * @param {function} [splitPlural] Optional split string to plural forms, yeilds Array
  * @param {Number} [numPlural] Optional expected number of plurals (expected delimiters + 1)
  * @param {string} [NODE_ENV] Reserved for testing
@@ -87,13 +91,15 @@ export const gettextFactory = ({
 export const ngettextFactory = ({
   ngettext = defaultNgettext,
   toToken = defaultToToken,
+  finaliseToken = defaultFinaliseToken,
   splitPlural = defaultSplitPlural,
   numPlural = 2,
   NODE_ENV = process.env.NODE_ENV
 } = {}) => (...quantity) => (strings, ...substitutions) => {
+
   // get a msgid template with sensible token names and split by the delimiter
   const tokens = substitutions.map(toToken);
-  const {names, values, msgid} = getTemplate(strings, tokens);
+  const msgid = getTemplate(strings, tokens);
   const msgidForms = splitPlural(msgid);
 
   // validate
@@ -105,7 +111,7 @@ export const ngettextFactory = ({
 
   // translate and make substitutions
   const msgstr = ngettext(...msgidForms, ...quantity);
-  return makeSubstitutions({msgstr, names, values});
+  return makeSubstitutions({msgstr, tokens, finaliseToken});
 };
 
 

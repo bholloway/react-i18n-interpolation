@@ -267,15 +267,22 @@ There is a default implementation that expects exactly 2 plural forms and does n
 
 Substitutions are each passed through a `toToken` function which you can override.
 
-This function infers `{label, name, key, value}` for any given substitution. It also ensures any React element `value` has a valid `key`.
- 
-By overriding it you can change each substitution token. Such as:
-* Change the `label` that appears in validation errors
-* Change the `__name__` that appears in the untranslated `msgid` text.
-* Change the `key` that is assigned to React elements.
-* Change the `value` by injecting props, converting text to elements, etc.
+By overriding it you can change each substitution token.
 
-Validation of the tokens is made following `toToken`. Tokens may only share `name` or `key` where they have the same `value`. 
+All implementations must return the following:
+
+* `label : string` that appears in validation errors
+* `name : string` that serves as placeholder text in the untranslated `msgid` text.
+* `key : string` the hash key of the substitution, if present.
+* `value : *` the value from the substitution.
+
+Validation of the tokens is made following `toToken`. Tokens may only share `name` where they have the same `value`. 
+
+### `finaliseToken : function`
+
+Once substitutions have been made it is possible that the same React element will appear twice.
+
+At minimum, React requires these occurences to have a different `key`. The default implementation will clone these elements with a unique `key` where it is not already set.
 
 ### `splitPlural : function`
 
