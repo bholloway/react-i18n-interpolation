@@ -1,34 +1,51 @@
-import {defaultToToken, assertTokens} from './token';
+import {defaultToToken, defaultFinaliseToken, assertTokens} from './token';
 import {getTemplate, makeSubstitutions} from './template';
-import {calculateDelimiters} from './delimited';
+import {defaultNgettext, defaultSplitPlural, assertPluralForms} from './plurals';
 
 
 /**
  * Gettext as a tagged template string interpolator.
  *
  * For the interpolator, substitutions should be objects with a single key-value pair. The key
- * gives the `key` and `name` for the token and the `value` gives the value.
+ * gives the `key` and `name` for the token and the `value` gives the value. Substitutions with the
+ * same `name` must have `value` or an Error with result.
  *
  * Where all `substitutions` are `string` then a `string` is returned. Otherwise an `Array` is
  * returned. This allows React elements as substitutions. Elements must have an explicit `key` or
  * they will be assigned one automatically.
  *
- * Failure to pass a `translate` function will not result in an error, but no translation will
+ * Failure to pass a `gettext` function will not result in an error, but no translation will
  * occur.
  *
+ * Customisation of the `toToken` and `finaliseToken` functions is for advanced users only. Make
+ * reference to the source code.
+ *
+ * @throws Error On substitutions with duplicate `name`
  * @param {function} [gettext] Optional translation function, required for translation to occur
- * @param {function} [toToken] Optional custom token inference function, yeilds {name, key, value}
+ * @param {function} [toToken] Optional custom token inference function yields {label, name, value}
+ * @param {function} [finaliseToken] Optional transform of token to final value
+ * @param {string} [NODE_ENV] Reserved for testing
  * @returns {function(array, ...string):array|string} Template string interpolator
  */
 export const gettextFactory = ({
   gettext = x => x,
-  toToken = defaultToToken
+  toToken = defaultToToken,
+  finaliseToken = defaultFinaliseToken,
+  NODE_ENV = process.env.NODE_ENV
 } = {}) => (strings, ...substitutions) => {
+
+  // get a msgid template with sensible token names
   const tokens = substitutions.map(toToken);
-  const {names, values, msgid} = getTemplate(strings, tokens);
-  assertTokens(tokens, `Error in gettext(${msgid})`);
+  const msgid = getTemplate(strings, tokens);
+
+  // validate unless production
+  if (NODE_ENV !== 'production') {
+    assertTokens(tokens, `Error in gettext\`${msgid}\``);
+  }
+
+  // translate and substitute
   const msgstr = gettext(msgid);
-  return makeSubstitutions({msgstr, names, values});
+  return makeSubstitutions({msgstr, tokens, finaliseToken});
 };
 
 
@@ -43,58 +60,58 @@ export const gettextFactory = ({
  * gives the `key` and `name` for the token and the `value` gives the value.
  *
  * Singular and plural forms are contained in the same template and delimited by `delimiter`, by
- * default this is the pipe `|` character. The entire template is translated before the singular or
- * plural form is chosen.
+ * default this is the pipe `|` character.
  *
- * Under normal conditions there must be exactly one delimiter in the template. However a custom
- * `choose` method allows any number of delimited forms, and any mapping between factory arguments
- * and the selected form.
+ * The underlying `ngettext` implementation will choose a single form. It is passed the delimited
+ * strings followed by all arguments to the outer function. Validation of arguments is the
+ * concern of `ngettext` and the user must either ensure that the `quantity` is singular or provide
+ * an `ngettext` that performs validation.
  *
  * Where all `substitutions` are `string` then a `string` is returned. Otherwise an `Array` is
  * returned. This allows React elements as substitutions. Elements must have an explicit `key` or
  * they will be assigned one automatically.
  *
- * Failure to pass a `translate` function will not result in an error, but no translation will
- * occur.
+ * Failure to pass a `ngettext` function will not result in an error, but no translation will
+ * occur. This degenerate case supports exactly 2 plural forms which may not suit some developers.
+ * If you need more forms for development then pass explict `numPlural` and a custom `splitPlural`
+ * implementation.
  *
+ * Customisation of the `toToken` and `finaliseToken` functions is for advanced users only. Make
+ * reference to the source code.
+ *
+ * @throws Error On substitutions with duplicate `name`, or on insufficent plural forms
  * @param {function} [ngettext] Optional translation function, required for translation to occur
- * @param {function} [toToken] Optional custom token inference function, yeilds {name, key, value}
- * @param {string} [delimiter] Optional custom delimiter character
- * @returns {function():function} Factory for a template string interpolator
+ * @param {function} [toToken] Optional custom token inference function yields {label, name, value}
+ * @param {function} [finaliseToken] Optional transform of token to final value
+ * @param {function} [splitPlural] Optional split string to plural forms, yeilds Array
+ * @param {Number} [numPlural] Optional expected number of plurals (expected delimiters + 1)
+ * @param {string} [NODE_ENV] Reserved for testing
+ * @returns {function(quantity:int):function} Factory for a template string interpolator
  */
 export const ngettextFactory = ({
-  ngettext = x => x,
+  ngettext = defaultNgettext,
   toToken = defaultToToken,
-  delimiter = '|'
-} = {}) => {
-  /*
-  const calc = calculateDelimiters(delimiter);
+  finaliseToken = defaultFinaliseToken,
+  splitPlural = defaultSplitPlural,
+  numPlural = 2,
+  NODE_ENV = process.env.NODE_ENV
+} = {}) => (...quantity) => (strings, ...substitutions) => {
 
-  return (...quantity) => (strings, ...substitutions) => {
-    // construct a template with name->value tokens
-    const tokens = substitutions.map(toToken);
-    assertTokens(tokens, `Error in ngettext(${msgid})`);
-    const {names, values, msgid} = getTemplate(strings, tokens);
+  // get a msgid template with sensible token names and split by the delimiter
+  const tokens = substitutions.map(toToken);
+  const msgid = getTemplate(strings, tokens);
+  const msgidForms = splitPlural(msgid);
 
-    // translate
-    const msgstr = ngettext(msgid/*, ...TBD*//*);
+  // validate
+  if (NODE_ENV !== 'production') {
+    const message = `Error in ngettext(${quantity.map(String).join(', ')})\`${msgid}\``;
+    assertTokens(tokens, message);
+    assertPluralForms(numPlural, msgidForms.length, message);
+  }
 
-    // process delimiters
-    const {lengthUntranslated, lengthTranslated, groups} = calc({strings, msgstr, names, values});
-
-    // ensure translation preserves delimiters
-    if (lengthUntranslated !== lengthTranslated) {
-      throw new Error('ngettext : translation must preserve all delimiter characters');
-    } else if (lengthUntranslated < 2) {
-      throw new Error(`ngettext : must contain a delimiter character "${delimiter}"`);
-    }
-
-    // evaluate just the singular or plural
-    const chosen = choose(groups, ...quantity);
-    const {substituted, isText} = makeSubstitutions(chosen);
-    return isText ? substituted.join('') : substituted;
-  };
-  */
+  // translate and make substitutions
+  const msgstr = ngettext(...msgidForms, ...quantity);
+  return makeSubstitutions({msgstr, tokens, finaliseToken});
 };
 
 

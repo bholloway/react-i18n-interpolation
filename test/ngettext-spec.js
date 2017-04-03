@@ -1,8 +1,9 @@
 import React from 'react';
 import describe from 'tape-bdd';
 import sinon from 'sinon';
+import {defaultNgettext} from '../src/plurals';
 import {ngettextFactory} from '../src/index';
-import {parametric} from './helpers';
+import {parametric, pair, permute} from './helpers';
 
 const SIMPLE_TYPES = [undefined, '', 'bar', false, true, 12, NaN];
 
@@ -12,9 +13,9 @@ const NON_NUMERIC_TYPES = [undefined, '', 'bar', false, true, null, {}, Symbol('
 
 const createSpy = () => {
   const spy = sinon.spy();
-  const ngettext = (text) => {
-    spy(text);
-    return text;
+  const ngettext = (...args) => {
+    spy(...args);
+    return defaultNgettext(...args);
   };
 
   return {spy, ngettext};
@@ -50,10 +51,7 @@ describe('ngettext', (it, describe) => {
   });
 
   describe('plural forms', (it) => {
-    const splitPlural = msgid => msgid.split('|');
-    splitPlural.expect = 3;
-
-    const ngettext = (s, p1, p2, q) => {
+    const ngettext3 = (s, p1, p2, q) => {
       switch (true) {
         case (typeof q !== 'number'):
         case isNaN(q):
@@ -67,7 +65,10 @@ describe('ngettext', (it, describe) => {
     };
 
     it('should support multiple forms', parametric(() => {
-      const template = ngettextFactory({splitPlural, ngettext});
+      const template = ngettextFactory({
+        numPlural: 3,
+        ngettext: ngettext3
+      });
 
       return [
         [template()`singular|plural1|plural2`, 'singular'],
@@ -82,7 +83,10 @@ describe('ngettext', (it, describe) => {
     }));
 
     it('should throw on new delimiter count mismatch', (assert) => {
-      const template = ngettextFactory({splitPlural, ngettext});
+      const template = ngettextFactory({
+        numPlural: 3,
+        ngettext: ngettext3
+      });
 
       assert.throws(() => template()`foo|bar`);
     });
@@ -93,45 +97,56 @@ describe('ngettext', (it, describe) => {
 
     it('should return string for simple-typed substitutions', parametric(() => {
       const template = ngettextFactory();
+      const testSet = permute([1, 2])(pair(SIMPLE_TYPES));
 
-      return [
-        ...SIMPLE_TYPES.map(v => [template(1)`foo ${v}|blit`, `foo ${v}`])
-      ];
+      return testSet.map(([v1, v2, q]) => [
+        template(q)`foo ${v1}|bar ${v2}`,
+        (q === 1) ? `foo ${v1}` : `bar ${v2}`
+      ]);
     }));
 
     it('should return Array for complex-typed substitutions', parametric(() => {
       const template = ngettextFactory();
+      const testSet = permute([1, 2])(pair(COMPLEX_TYPES));
 
-      return COMPLEX_TYPES
-        .map(v => [template(1)`foo ${v}|blit`, ['foo ', v]]);
+      return testSet.map(([v1, v2, q]) => [
+        template(q)`foo ${v1}|bar ${v2}`,
+        (q === 1) ? ['foo ', v1] : ['bar ', v2]
+      ]);
     }));
 
     it('should collapse adjacent string elements', parametric(() => {
       const template = ngettextFactory();
 
       return [
-        [template(1)`1${'2'}3${null}4|blit`, ['123', null, '4']]
+        [template(1)`1${'2'}3${null}4|5${'2'}6${null}7`, ['123', null, '4']],
+        [template(2)`1${'2'}3${null}4|5${'2'}6${null}7`, ['526', null, '7']]
       ];
     }));
 
-    it('should retain whitespace substitutions |blit`(unlike normal literals)', parametric(() => {
+    it('should retain whitespace substitutions (unlike normal literals)', parametric(() => {
       const template = ngettextFactory();
 
       return [
-        [template(1)`${' '}${2}${' '}|blit`, ' 2 ']
+        [template(1)`${' '}${2}${' '}|${' '}${3}${' '}`, ' 2 '],
+        [template(2)`${' '}${2}${' '}|${' '}${3}${' '}`, ' 3 ']
       ];
     }));
 
     it('should substitute before translation', parametric(() => {
       const {spy, ngettext} = createSpy();
       const template = ngettextFactory({ngettext});
+      const testSet = permute([1, 2])(pair([...SIMPLE_TYPES, ...COMPLEX_TYPES]));
 
       // spy is called as a side-effect
-      [...SIMPLE_TYPES, ...COMPLEX_TYPES]
-        .forEach(v => template(1)`foo ${v}|blit`);
+      testSet.forEach(([v1, v2, q]) =>
+        template(q)`foo ${v1}|bar ${v2}`
+      );
 
-      return [...SIMPLE_TYPES, ...COMPLEX_TYPES]
-        .map((v, i) => [spy.getCall(i).args[0], `foo ${String(v)}`]);
+      return testSet.map(([v1, v2, q], i) => [
+        spy.getCall(i).args,
+        [`foo ${String(v1)}`, `bar ${String(v2)}`, q]
+      ]);
     }));
   });
 
@@ -141,32 +156,56 @@ describe('ngettext', (it, describe) => {
       const template = ngettextFactory();
 
       return [
-        ...SIMPLE_TYPES.map(v => [template(1)`foo ${{a: v}}|blit`, `foo ${v}`]),
-        ...COMPLEX_TYPES.map(v => [template(1)`foo ${{a: v}}|blit`, ['foo ', v]])
+        ...permute([1, 2])(pair(SIMPLE_TYPES))
+          .map(([v1, v2, q]) => [
+            template(q)`foo ${{a: v1}}|bar ${{b: v2}}`,
+            (q === 1) ? `foo ${v1}` : `bar ${v2}`
+          ]),
+        ...permute([1, 2])(pair(COMPLEX_TYPES))
+          .map(([v1, v2, q]) => [
+            template(q)`foo ${{a: v1}}|bar ${{b: v2}}`,
+            (q === 1) ? ['foo ', v1] : ['bar ', v2]
+          ]),
       ];
     }));
 
     it('should use the hash key in the translation', parametric(() => {
       const {spy, ngettext} = createSpy();
       const template = ngettextFactory({ngettext});
+      const testSet = permute([1, 2])(pair([...SIMPLE_TYPES, ...COMPLEX_TYPES]));
 
       // spy is called as a side-effect
-      [...SIMPLE_TYPES, ...COMPLEX_TYPES]
-        .forEach(v => template(1)`foo ${{a: v}}|blit`);
+      testSet.forEach(([v1, v2, q]) =>
+        template(q)`foo ${{a: v1}}|bar ${{b: v2}}`
+      );
 
-      return [...SIMPLE_TYPES, ...COMPLEX_TYPES]
-        .map((v, i) => [spy.getCall(i).args[0], 'foo __a__']);
+      return testSet.map(([v1, v2, q], i) => [
+        spy.getCall(i).args,
+        ['foo __a__', 'bar __b__', q]
+      ]);
     }));
 
     it('should not generate empty string elements', parametric(() => {
       const template = ngettextFactory();
+      const testSet = permute([1, 2])(pair(COMPLEX_TYPES));
 
       return [
-        ...COMPLEX_TYPES.map(v => [template(1)`${{a: v}}${{a: v}}${{a: v}}|blit`, [v, v, v]]),
-        ...COMPLEX_TYPES.map(v => [template(1)`a${{a: v}}${{a: v}}${{a: v}}|blit`, ['a', v, v, v]]),
-        ...COMPLEX_TYPES.map(v => [template(1)`${{a: v}}b${{a: v}}${{a: v}}|blit`, [v, 'b', v, v]]),
-        ...COMPLEX_TYPES.map(v => [template(1)`${{a: v}}${{a: v}}c${{a: v}}|blit`, [v, v, 'c', v]]),
-        ...COMPLEX_TYPES.map(v => [template(1)`${{a: v}}${{a: v}}${{a: v}}d|blit`, [v, v, v, 'd']])
+        ...testSet.map(([v1, v2, q]) => [
+          template(q)`${{w: v1}}${{x: v2}}|${{y: v1}}${{z: v2}}`,
+          [v1, v2]
+        ]),
+        ...testSet.map(([v1, v2, q]) => [
+          template(q)`a${{w: v1}}${{x: v2}}|a${{y: v1}}${{z: v2}}`,
+          ['a', v1, v2]
+        ]),
+        ...testSet.map(([v1, v2, q]) => [
+          template(q)`${{w: v1}}b${{x: v2}}|${{y: v1}}b${{z: v2}}`,
+          [v1, 'b', v2]
+        ]),
+        ...testSet.map(([v1, v2, q]) => [
+          template(q)`${{w: v1}}${{x: v2}}c|${{y: v1}}${{z: v2}}c`,
+          [v1, v2, 'c']
+        ])
       ];
     }));
 
@@ -174,7 +213,8 @@ describe('ngettext', (it, describe) => {
       const template = ngettextFactory();
 
       return [
-        [template(1)`1${{a: '2'}}3${{b: null}}4|blit`, ['123', null, '4']]
+        [template(1)`1${{a: '2'}}3${{b: null}}4|5${{a: '2'}}6${{b: null}}7`, ['123', null, '4']],
+        [template(2)`1${{a: '2'}}3${{b: null}}4|5${{a: '2'}}6${{b: null}}7`, ['526', null, '7']]
       ];
     }));
 
@@ -210,7 +250,7 @@ describe('ngettext', (it, describe) => {
     it('should use the hash value', (assert) => {
       const template = ngettextFactory();
       const element = React.createElement('span', {foo: 'bar'});
-      const result = template(1)`foo ${{a: element}}|blit`;
+      const result = template(1)`foo ${{a: element}}|bar ${{b: element}}`;
 
       assert.ok(React.isValidElement(result[1]));
     });
@@ -226,17 +266,27 @@ describe('ngettext', (it, describe) => {
     it('should assign element key where empty', (assert) => {
       const template = ngettextFactory();
       const element = React.createElement('span', {foo: 'bar'});
-      const result = template(1)`foo ${{a: element}}|blit`;
 
-      assert.looseEqual(result[1], {...element, key: 'a'});
+      assert.deepLooseEqual([
+        template(1)`foo ${{a: element}}|bar ${{b: element}}`,
+        template(2)`foo ${{a: element}}|${{b: element}} bar`
+      ], [
+        ['foo ', {...element, key: 'a-1'}],
+        [{...element, key: 'b-0'}, ' bar']
+      ]);
     });
 
     it('should not overwrite element key', (assert) => {
       const template = ngettextFactory();
       const element = React.createElement('span', {key: 'baz', foo: 'bar'});
-      const result = template(1)`foo ${{a: element}}|blit`;
 
-      assert.looseEqual(result[1], {...element, key: 'baz'});
+      assert.deepLooseEqual([
+        template(1)`foo ${{a: element}}|bar ${{b: element}}`,
+        template(2)`foo ${{a: element}}|${{b: element}} bar`
+      ], [
+        ['foo ', {...element, key: 'baz'}],
+        [{...element, key: 'baz'}, ' bar']
+      ]);
     });
   });
 });

@@ -34,9 +34,8 @@ describe('gettext', (it, describe) => {
     it('should return string for simple-typed substitutions', parametric(() => {
       const template = gettextFactory();
 
-      return [
-        ...SIMPLE_TYPES.map(v => [template`foo ${v}`, `foo ${v}`])
-      ];
+      return SIMPLE_TYPES
+        .map(v => [template`foo ${v}`, `foo ${v}`]);
     }));
 
     it('should return Array for complex-typed substitutions', parametric(() => {
@@ -166,9 +165,14 @@ describe('gettext', (it, describe) => {
     it('should assign element key where empty', (assert) => {
       const template = gettextFactory();
       const element = React.createElement('span', {foo: 'bar'});
-      const result = template`foo ${{a: element}}`;
 
-      assert.looseEqual(result[1], {...element, key: 'a'});
+      assert.deepLooseEqual([
+        template`foo ${{a: element}}`,
+        template`${{b: element}} bar`
+      ], [
+        ['foo ', {...element, key: 'a-1'}],
+        [{...element, key: 'b-0'}, ' bar']
+      ]);
     });
 
     it('should not overwrite element key', (assert) => {
