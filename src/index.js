@@ -122,6 +122,19 @@ export const ngettextFactory = ({
 
 
 /**
+ * Create a hash of all methods using shared options.
+ *
+ * @param {{gettext:{gettext: function, ngettext: function}, toToken: function,
+ * finaliseToken: function, splitPlural: function, numPlural: Number,
+ * NODE_ENV: string}} [options] Shared options to pass to method factories
+ */
+export const factory = options => ({
+  gettext: gettextFactory(options),
+  ngettext: ngettextFactory(options)
+});
+
+
+/**
  * Gettext as a degenerate template string interpolator.
  * @type {*}
  */
