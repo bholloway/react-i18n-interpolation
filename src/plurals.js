@@ -18,17 +18,3 @@ export const defaultNgettext = (singular, plural, quantity) =>
  */
 export const defaultSplitPlural = msgid =>
   msgid.split('|');
-
-
-/**
- *
- * @throws Error on incorrect number of plural forms
- * @param {number|*} expected Expected number of plural forms, possibly non-numeric where disabled
- * @param {number} actual Actual number of plural forms found
- * @param {string} message A title for the error
- */
-export const assertPluralForms = (expected, actual, message) => {
-  if (!isNaN(expected) && (expected > 0) && (actual !== expected)) {
-    throw new Error(`${message}: expected ${expected} plural forms, saw ${actual}`);
-  }
-};

@@ -18,7 +18,7 @@ const createSpy = () => {
     return defaultNgettext(...args);
   };
 
-  return {spy, ngettext};
+  return {spy, gettext: {ngettext}};
 };
 
 
@@ -38,6 +38,12 @@ describe('ngettext', (it, describe) => {
     ];
   }));
 
+  it('should throw on bad gettext instance', (assert) => {
+    const template = ngettextFactory({gettext: {}});
+
+    assert.throws(() => template(1)`foo`, /missing ngettext/);
+  });
+
   it('should throw on delimiter count mismatch', (assert) => {
     const template = ngettextFactory();
 
@@ -51,24 +57,23 @@ describe('ngettext', (it, describe) => {
   });
 
   describe('plural forms', (it) => {
-    const ngettext3 = (s, p1, p2, q) => {
-      switch (true) {
-        case (typeof q !== 'number'):
-        case isNaN(q):
-        case (q === 1):
-          return s;
-        case (q > 2):
-          return p2;
-        default:
-          return p1;
+    const gettext = {
+      ngettext(s, p1, p2, q) {
+        switch (true) {
+          case (typeof q !== 'number'):
+          case isNaN(q):
+          case (q === 1):
+            return s;
+          case (q > 2):
+            return p2;
+          default:
+            return p1;
+        }
       }
     };
 
     it('should support multiple forms', parametric(() => {
-      const template = ngettextFactory({
-        numPlural: 3,
-        ngettext: ngettext3
-      });
+      const template = ngettextFactory({gettext, numPlural: 3});
 
       return [
         [template()`singular|plural1|plural2`, 'singular'],
@@ -83,10 +88,7 @@ describe('ngettext', (it, describe) => {
     }));
 
     it('should throw on new delimiter count mismatch', (assert) => {
-      const template = ngettextFactory({
-        numPlural: 3,
-        ngettext: ngettext3
-      });
+      const template = ngettextFactory({gettext, numPlural: 3});
 
       assert.throws(() => template()`foo|bar`);
     });
@@ -134,8 +136,8 @@ describe('ngettext', (it, describe) => {
     }));
 
     it('should substitute before translation', parametric(() => {
-      const {spy, ngettext} = createSpy();
-      const template = ngettextFactory({ngettext});
+      const {spy, gettext} = createSpy();
+      const template = ngettextFactory({gettext});
       const testSet = permute([1, 2])(pair([...SIMPLE_TYPES, ...COMPLEX_TYPES]));
 
       // spy is called as a side-effect
@@ -170,8 +172,8 @@ describe('ngettext', (it, describe) => {
     }));
 
     it('should use the hash key in the translation', parametric(() => {
-      const {spy, ngettext} = createSpy();
-      const template = ngettextFactory({ngettext});
+      const {spy, gettext} = createSpy();
+      const template = ngettextFactory({gettext});
       const testSet = permute([1, 2])(pair([...SIMPLE_TYPES, ...COMPLEX_TYPES]));
 
       // spy is called as a side-effect

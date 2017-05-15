@@ -62,19 +62,3 @@ export const calculateCollisions = tokens =>
     })
     .filter(Boolean)
     .filter((msg, i, arr) => !arr.slice(0, i).find(prev => (prev.indexOf(msg) >= 0)));
-
-
-/**
- * Throw on token name collisions.
- *
- * @throws Error on name collision
- * @param {Array.<{name :string, value: *}>} tokens A number of tokens
- * @param {string} message A title for the error
- */
-export const assertTokens = (tokens, message) => {
-  const collisions = calculateCollisions(tokens);
-  if (collisions.length) {
-    throw new Error(
-      `${message}: substitution with the same name must have the same value: ${collisions}`);
-  }
-};

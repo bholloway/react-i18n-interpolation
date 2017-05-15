@@ -16,7 +16,7 @@ const createSpy = () => {
     return text;
   };
 
-  return {spy, gettext};
+  return {spy, gettext: {gettext}};
 };
 
 
@@ -28,6 +28,12 @@ describe('gettext', (it, describe) => {
       [template`foo`, 'foo']
     ];
   }));
+
+  it('should throw on bad gettext instance', (assert) => {
+    const template = gettextFactory({gettext: {}});
+
+    assert.throws(() => template`foo`, /missing gettext/);
+  });
 
   describe('with plain substitution', (it) => {
 
