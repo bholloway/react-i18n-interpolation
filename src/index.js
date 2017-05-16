@@ -1,6 +1,7 @@
-import {defaultToToken, defaultFinaliseToken, assertTokens} from './token';
+import {defaultToToken, defaultFinaliseToken} from './token';
 import {getTemplate, makeSubstitutions} from './template';
-import {defaultNgettext, defaultSplitPlural, assertPluralForms} from './plurals';
+import {defaultNgettext, defaultSplitPlural} from './plurals';
+import {assertGettextInstance, assertTokens, assertPluralForms} from './assert';
 
 
 /**
@@ -21,14 +22,14 @@ import {defaultNgettext, defaultSplitPlural, assertPluralForms} from './plurals'
  * reference to the source code.
  *
  * @throws Error On substitutions with duplicate `name`
- * @param {function} [gettext] Optional translation function, required for translation to occur
+ * @param {{gettext: function}} [gettext] Optional gettext instance that contains gettext function
  * @param {function} [toToken] Optional custom token inference function yields {label, name, value}
  * @param {function} [finaliseToken] Optional transform of token to final value
  * @param {string} [NODE_ENV] Reserved for testing
  * @returns {function(array, ...string):array|string} Template string interpolator
  */
 export const gettextFactory = ({
-  gettext = x => x,
+  gettext = {gettext: x => x},
   toToken = defaultToToken,
   finaliseToken = defaultFinaliseToken,
   NODE_ENV = process.env.NODE_ENV
@@ -40,11 +41,14 @@ export const gettextFactory = ({
 
   // validate unless production
   if (NODE_ENV !== 'production') {
-    assertTokens(tokens, `Error in gettext\`${msgid}\``);
+    const message = `Error in gettext\`${msgid}\``;
+    assertGettextInstance(gettext, 'gettext', message);
+    assertTokens(tokens, message);
   }
 
   // translate and substitute
-  const msgstr = gettext(msgid);
+  //  we need to call from the gettext parent object in case gettext() uses 'this'
+  const msgstr = gettext.gettext(msgid);
   return makeSubstitutions({msgstr, tokens, finaliseToken});
 };
 
@@ -80,7 +84,7 @@ export const gettextFactory = ({
  * reference to the source code.
  *
  * @throws Error On substitutions with duplicate `name`, or on insufficent plural forms
- * @param {function} [ngettext] Optional translation function, required for translation to occur
+ * @param {{ngettext: function}} [gettext] Optional gettext instance that contains ngettext function
  * @param {function} [toToken] Optional custom token inference function yields {label, name, value}
  * @param {function} [finaliseToken] Optional transform of token to final value
  * @param {function} [splitPlural] Optional split string to plural forms, yeilds Array
@@ -89,7 +93,7 @@ export const gettextFactory = ({
  * @returns {function(quantity:int):function} Factory for a template string interpolator
  */
 export const ngettextFactory = ({
-  ngettext = defaultNgettext,
+  gettext = {ngettext: defaultNgettext},
   toToken = defaultToToken,
   finaliseToken = defaultFinaliseToken,
   splitPlural = defaultSplitPlural,
@@ -102,17 +106,32 @@ export const ngettextFactory = ({
   const msgid = getTemplate(strings, tokens);
   const msgidForms = splitPlural(msgid);
 
-  // validate
+  // validate unless production
   if (NODE_ENV !== 'production') {
     const message = `Error in ngettext(${quantity.map(String).join(', ')})\`${msgid}\``;
+    assertGettextInstance(gettext, 'ngettext', message);
     assertTokens(tokens, message);
     assertPluralForms(numPlural, msgidForms.length, message);
   }
 
   // translate and make substitutions
-  const msgstr = ngettext(...msgidForms, ...quantity);
+  //  we need to call from the gettext parent object in case ngettext() uses 'this'
+  const msgstr = gettext.ngettext(...msgidForms, ...quantity);
   return makeSubstitutions({msgstr, tokens, finaliseToken});
 };
+
+
+/**
+ * Create a hash of all methods using shared options.
+ *
+ * @param {{gettext:{gettext: function, ngettext: function}, toToken: function,
+ * finaliseToken: function, splitPlural: function, numPlural: Number,
+ * NODE_ENV: string}} [options] Shared options to pass to method factories
+ */
+export const factory = options => ({
+  gettext: gettextFactory(options),
+  ngettext: ngettextFactory(options)
+});
 
 
 /**
