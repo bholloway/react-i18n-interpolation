@@ -123,22 +123,16 @@ Setup in your application.
 
 ```javascript
 import NodeGettext from 'node-gettext';
-import {gettextFactory, ngettextFactory} from 'react-i18-interpolation';
+import {factory} from 'react-i18-interpolation';
 
 const nodeGettext = new NodeGettext();
 nodeGettext.addTextdomain(...);
 nodeGettext.textdomain(...);
   
-const gettext = gettextFactory({
-  gettext: nodeGettext.gettext
-});
-const ngettext = ngettextFactory({
-  ngettext: nodeGettext.ngettext
-});
+const {gettext, ngettext} = factory({gettext: nodeGettext});
 ```
 
 We recommend you distribute these method(s) to components by `redux`, or failing that but `context`. Using `redux` allows your UI to respond to changes in text domain real-time.
-
 
 ### API
 
@@ -251,17 +245,15 @@ msgstr[1] ...
 
 ## Options
 
-### `gettext : function`
+### `gettext : {gettext: function, ngettext: function}`
 
-An underlying translation function that follows the signature of [gettext](https://linux.die.net/man/3/gettext). 
+Underlying translation functions that follow the signature of [gettext](https://linux.die.net/man/3/gettext) and
+[ngettext](https://linux.die.net/man/3/ngettext).
 
-There is a default implementation that does not perform any translation. You will see it if you make use of `gettextDefault`.
+An instance of [node-gettext](https://www.npmjs.com/package/gettext) or hash of `gettext` and `ngettext` methods.
 
-### `ngettext : function`
-
-An underlying translation function that follows the signature of [ngettext](https://linux.die.net/man/3/ngettext). 
-
-There is a default implementation that expects exactly 2 plural forms and does not perform any translation. You will see it if you make use of `ngettextDefault`.
+There is a default implementation that does not perform any translation. You will see it if you make use of `gettextDefault`
+or `ngettextDefault`
 
 ### `toToken : function`
 
