@@ -1,6 +1,6 @@
 import {defaultToToken, defaultFinaliseToken} from './token';
 import {getTemplate, makeSubstitutions} from './template';
-import {defaultNgettext, defaultSplitPlural} from './defaults';
+import {defaultGettext, defaultNgettext, defaultSplitPlural} from './defaults';
 import {assertGettextInstance, assertTokens, assertPluralForms} from './assert';
 
 
@@ -29,7 +29,7 @@ import {assertGettextInstance, assertTokens, assertPluralForms} from './assert';
  * @returns {function(array, ...string):array|string} Template string interpolator
  */
 export const gettextFactory = ({
-  gettext = {gettext: x => x},
+  gettext = {gettext: defaultGettext},
   toToken = defaultToToken,
   finaliseToken = defaultFinaliseToken,
   NODE_ENV = process.env.NODE_ENV

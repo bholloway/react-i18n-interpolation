@@ -1,4 +1,13 @@
 /**
+ * Gettext implementation that performs no translation.
+ *
+ * @param {string} msgid
+ * @returns msgstr
+ */
+export const defaultGettext = msgid => msgid;
+
+
+/**
  * Ngettext implementation that performs no translation.
  *
  * @param {string} singular A msgid for when `quantity === 1`

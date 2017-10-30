@@ -6,6 +6,8 @@
     "comma-dangle": "off",
     "import/prefer-default-export": "off",
     "no-shadow": ["error", { "allow": ["describe", "it"] }],
-    "padded-blocks": "off"
+    "padded-blocks": "off",
+    "no-mixed-operators": "off",
+    "no-nested-ternary": "off"
   }
 }

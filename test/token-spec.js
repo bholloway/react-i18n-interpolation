@@ -1,53 +1,83 @@
-import describe from 'tape-bdd';
-import {calculateCollisions} from '../src/token';
+import test from 'tape';
+import {check, gen} from 'tape-check';
 
-describe('token validation', (it) => {
-  it('should allow colliding values', assert =>
-    assert.deepEqual(
-      calculateCollisions([
-        {label: 'a', key: 'x', name: '__a__', value: 10},
-        {label: 'b', key: 'x', name: '__b__', value: 10},
-        {label: 'c', key: 'y', name: '__c__', value: 10},
-        {label: 'd', key: 'z', name: '__c__', value: 10},
-        {label: 'e', key: 'x', name: '__a__', value: 10},
-        {label: 'e', key: 'x', name: '__b__', value: 10},
-        {label: 'e', key: 'y', name: '__c__', value: 10},
-        {label: 'e', key: 'z', name: '__c__', value: 10}
-      ]),
-      []
-    )
-  );
+import {times, safeIsNaN} from './helpers';
+import {
+  anyValue, anyNonEmptyAlphaNumericString,
+  anyEnumerableInvalidKey, anyEnumerableWithMultipleKeys,
+  genTokensWithDuplicateValues, genTokensWithDuplicateNames
+} from './generators';
 
-  it('should detect colliding names (same name different value)', assert =>
-    assert.deepEqual(
-      calculateCollisions([
-        {label: 'a', key: 'x', name: '__a__', value: 10},
-        {label: 'b', key: 'y', name: '__a__', value: 11},
-        {label: 'c', key: 'z', name: '__a__', value: 12}
-      ]),
-      ['a vs b vs c']
-    )
-  );
+import {defaultToToken, calculateCollisions} from '../src/token';
 
-  it('should allow colliding keys (same key different value)', assert =>
-    assert.deepEqual(
-      calculateCollisions([
-        {label: 'a', key: 'x', name: '__a__', value: 10},
-        {label: 'b', key: 'x', name: '__b__', value: 11},
-        {label: 'c', key: 'x', name: '__c__', value: 12}
-      ]),
-      []
-    )
-  );
 
-  it('should allow colliding labels (same label different value)', assert =>
-    assert.deepEqual(
-      calculateCollisions([
-        {label: 'a', key: 'x', name: '__a__', value: 10},
-        {label: 'a', key: 'y', name: '__b__', value: 11},
-        {label: 'a', key: 'z', name: '__c__', value: 12}
-      ]),
-      []
-    )
-  );
-});
+test('token parsing: direct substitutions or invalid keyed substitutions', check(
+  times(50),
+  gen.oneOfWeighted([
+    [10, anyValue],
+    [1, anyEnumerableInvalidKey],
+    [1, anyEnumerableWithMultipleKeys]
+  ]),
+  gen.intWithin(0, 10),
+  (t, substitution, i) => {
+    const {key, label, name, value} = defaultToToken(substitution, i);
+
+    t.equal(key, undefined, 'key should be undefined');
+    t.ok(label.includes(String(i)), 'label should include the given index');
+    t.equal(name, String(substitution), 'name should be the substitution cast to string');
+    t.equal(value, String(substitution), 'value should be the substitution cast to string');
+    t.end();
+  }
+));
+
+
+test('token parsing: valid keyed substitutions', check(
+  times(50),
+  anyNonEmptyAlphaNumericString,
+  anyValue,
+  gen.intWithin(0, 10),
+  (t, k, v, i) => {
+    const {key, label, name, value} = defaultToToken({[k]: v}, i);
+
+    t.equal(key, k, 'key is as specified');
+    t.ok(label.includes(String(i)), 'label is something that includes the index');
+    t.ok(label.includes(k), 'label is something that includes the key');
+    t.ok(name.includes(k), 'name is something that includes the key');
+
+    if (safeIsNaN(v)) {
+      t.ok(safeIsNaN(value), 'value should be as specified');
+    } else {
+      t.equal(value, v, 'value should be as specified');
+    }
+
+    t.end();
+  }
+));
+
+
+test('token validation: duplicate values', check(
+  times(50),
+  genTokensWithDuplicateValues,
+  (t, {tokens}) => {
+    t.deepEqual(
+      calculateCollisions(tokens),
+      [],
+      'should allow duplicate values unconditionally'
+    );
+    t.end();
+  }
+));
+
+
+test('token validation: duplicate names', check(
+  times(50),
+  genTokensWithDuplicateNames,
+  (t, {tokens, groupedLabels}) => {
+    t.deepEqual(
+      calculateCollisions(tokens),
+      groupedLabels.map(labels => labels.join(' vs ')),
+      'should disallow same name different value, and identify all such sets by label'
+    );
+    t.end();
+  }
+));

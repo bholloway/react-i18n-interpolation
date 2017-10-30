@@ -10,9 +10,8 @@ export const getTemplate = (strings, tokens) => {
     .reduce((reduced, {name}) => [...reduced, name], []);
 
   return strings
-    .map((v, i) => ((i < names.length) ? `${v}${names[i]}` : v))
-    .join('')
-    .replace(/\s{2,}/g, ' ');
+    .map((v, i) => ((i in names) ? `${v}${names[i]}` : v))
+    .join('');
 };
 
 
@@ -25,17 +24,11 @@ export const getTemplate = (strings, tokens) => {
  * @return {string|Array} A simple string or an Array of string and complex types
  */
 export const makeSubstitutions = ({msgstr, tokens, finaliseToken}) => {
-  const cast = (v) => {
-    switch (typeof v) {
-      case 'undefined':
-      case 'boolean':
-      case 'number':
-      case 'string':
-        return String(v);
-      default:
-        return v;
-    }
-  };
+  const primitiveToString = value => (
+    ((value === null) || ['undefined', 'boolean', 'number'].includes(typeof value)) ?
+      String(value) :
+      value
+  );
 
   const elements = tokens
     .reduce((reduced, {name}, i) => {
@@ -54,12 +47,15 @@ export const makeSubstitutions = ({msgstr, tokens, finaliseToken}) => {
 
   const substituted = elements
     .reduce((reduced, v) => {
-      const pending = cast(
-        (typeof v === 'number') ? finaliseToken(tokens[v], reduced.length) : v
-      );
+      // cast primitives to string
+      const pending = (typeof v === 'number') ?
+        primitiveToString(finaliseToken(tokens[v], reduced.length)) :
+        v;
+
       if (reduced.length === 0) {
         return [pending];
       } else {
+        // collapse adjoining strings
         const rest = reduced.slice(0, -1);
         const last = reduced[reduced.length - 1];
         return (typeof pending === 'string') && (typeof last === 'string') ?
