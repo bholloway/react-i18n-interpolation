@@ -1,7 +1,7 @@
 import React from 'react';
 import describe from 'tape-bdd';
 import sinon from 'sinon';
-import {defaultNgettext} from '../src/plurals';
+import {defaultNgettext} from '../src/defaults';
 import {ngettextFactory} from '../src/index';
 import {parametric, pair, permute} from './helpers';
 

@@ -1,6 +1,6 @@
 import {defaultToToken, defaultFinaliseToken} from './token';
 import {getTemplate, makeSubstitutions} from './template';
-import {defaultNgettext, defaultSplitPlural} from './plurals';
+import {defaultNgettext, defaultSplitPlural} from './defaults';
 import {assertGettextInstance, assertTokens, assertPluralForms} from './assert';
 
 
