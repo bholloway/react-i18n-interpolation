@@ -5,9 +5,11 @@
     "object-curly-spacing": "off",
     "comma-dangle": "off",
     "import/prefer-default-export": "off",
+    "import/no-extraneous-dependencies": ["error", { "devDependencies": true }],
     "no-shadow": ["error", { "allow": ["describe", "it"] }],
     "padded-blocks": "off",
     "no-mixed-operators": "off",
-    "no-nested-ternary": "off"
+    "no-nested-ternary": "off",
+    "react/jsx-filename-extension": "off"
   }
 }
