@@ -1,31 +1,36 @@
-import {calculateCollisions} from './token';
+import {calculateErrors, calculateCollisions} from './token';
 
 
 /**
- * Throw where the object[fieldname] is not a function.
+ * Throw where the object[field] is not a function.
  *
  * @throws Error on object does not contain a function
  * @param {object} obj An object that should contain a function member
- * @param {string} fieldname The name of the member expected to be a function
+ * @param {string} field The name of the member expected to be a function
  * @param {string} message A title for the error
  */
-export const assertGettextInstance = (obj, fieldname, message) => {
+export const assertGettextInstance = (obj, field, message) => {
   const isValid = (obj !== null) && (typeof obj === 'object') &&
-    (fieldname in obj) && (typeof obj[fieldname] === 'function');
+    (field in obj) && (typeof obj[field] === 'function');
   if (!isValid) {
-    throw new Error(`${message}: Gettext instance is missing ${fieldname}() member`);
+    throw new Error(`${message}: Gettext instance is missing ${field}() member`);
   }
 };
 
 
 /**
- * Throw on token name collisions.
+ * Throw on token problems.
  *
- * @throws Error on name collision
+ * @throws Error on token problems
  * @param {Array.<{name :string, value: *}>} tokens A number of tokens
  * @param {string} message A title for the error
  */
 export const assertTokens = (tokens, message) => {
+  const errors = calculateErrors(tokens);
+  if (errors.length) {
+    throw new Error(`${message}: ${errors[0]}`);
+  }
+
   const collisions = calculateCollisions(tokens);
   if (collisions.length) {
     throw new Error(

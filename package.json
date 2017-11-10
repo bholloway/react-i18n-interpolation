@@ -7,8 +7,8 @@
     "prepublish": "npm run lint && npm run build",
     "lint": "eslint src/** test/**",
     "build": "NODE_ENV=production babel src --out-dir lib && npm run test",
-    "test": "NODE_ENV=test tape -r babel-register ./test/**/*-spec.js | tap-diff",
-    "watch-test": "NODE_ENV=test tape-watch -r babel-register -R tape-bdd ./test/**/*-spec.js | tap-diff"
+    "test": "NODE_ENV=test TIMES=50 tape -r babel-register ./test/**/*-spec.js | tap-diff",
+    "watch-test": "NODE_ENV=test tape-watch -r babel-register ./test/**/*-spec.js | tap-diff"
   },
   "repository": {
     "type": "git",
@@ -40,15 +40,23 @@
     "babel-cli": "6.24.1",
     "babel-preset-react-app": "2.2.0",
     "babel-register": "6.24.1",
+    "enzyme": "3.1.1",
+    "enzyme-adapter-react-16": "1.0.4",
     "eslint": "3.19.0",
     "eslint-config-airbnb": "15.0.0",
     "eslint-plugin-import": "2.2.0",
     "eslint-plugin-jsx-a11y": "5.0.1",
     "eslint-plugin-react": "7.0.1",
+    "jsdom": "11.3.0",
+    "jsdom-global": "3.0.2",
+    "prop-types": "15.6.0",
+    "raf": "3.4.0",
+    "react": "16.0.0",
+    "react-dom": "16.0.0",
     "sinon": "2.2.0",
     "tap-diff": "0.1.1",
-    "tape": "4.6.3",
-    "tape-bdd": "0.0.1",
+    "tape": "4.8.0",
+    "tape-check": "1.0.0-rc.0",
     "tape-watch": "2.3.0"
   }
 }
