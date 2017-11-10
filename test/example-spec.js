@@ -5,8 +5,9 @@ import React from 'react';
 import {mount, configure} from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
 
-import {gettextDefault} from '../src/index';
+import {gettextDefault, ngettextDefault} from '../src/index';
 import {StrongText, AnchorText} from '../example/simple-inline';
+import {PaginationControl} from '../example/pagination-control';
 
 configure({adapter: new Adapter()});
 
@@ -25,6 +26,78 @@ test('example: simple-inline', (t) => {
     ).html(),
     '<p>Click <a href="http://google.com">here</a></p>',
     'anchor text should render correctly'
+  );
+
+  t.end();
+});
+
+test('example: pagination-control', (t) => {
+  t.equal(
+    mount(
+      <PaginationControl
+        gettext={gettextDefault}
+        ngettext={ngettextDefault}
+        pageSize={5}
+      />
+    ).html(),
+    null,
+    'degenerate case should render correctly'
+  );
+
+  t.equal(
+    mount(
+      <PaginationControl
+        gettext={gettextDefault}
+        ngettext={ngettextDefault}
+        currentSize={5}
+        totalSize={20}
+        pageSize={5}
+      />
+    ).html(),
+    '<div>Show <a href="">5 more</a></div>',
+    'minimal case should render correctly'
+  );
+
+  t.equal(
+    mount(
+      <PaginationControl
+        gettext={gettextDefault}
+        ngettext={ngettextDefault}
+        currentSize={6}
+        totalSize={20}
+        pageSize={5}
+      />
+    ).html(),
+    '<div>Show <a href="">5 more</a> or <a href="">one less</a></div>',
+    'minimal limited case should render correctly'
+  );
+
+  t.equal(
+    mount(
+      <PaginationControl
+        gettext={gettextDefault}
+        ngettext={ngettextDefault}
+        currentSize={20}
+        totalSize={21}
+        pageSize={5}
+      />
+    ).html(),
+    '<div>Show <a href="">one more</a> or <a href="">5 less</a></div>',
+    'maximal limited case should render correctly'
+  );
+
+  t.equal(
+    mount(
+      <PaginationControl
+        gettext={gettextDefault}
+        ngettext={ngettextDefault}
+        currentSize={20}
+        totalSize={20}
+        pageSize={5}
+      />
+    ).html(),
+    '<div>Show <a href="">5 less</a></div>',
+    'maximal case should render correctly'
   );
 
   t.end();
