@@ -1,7 +1,9 @@
 import {defaultToToken, defaultFinaliseToken} from './token';
 import {getTemplate, makeSubstitutions} from './template';
 import {defaultGettext, defaultNgettext, defaultSplitPlural} from './defaults';
-import {assertGettextInstance, assertTokens, assertPluralForms} from './assert';
+import {
+  assertGettextInstance, assertQuantity, assertUnexpected, assertTokens, assertPluralForms
+} from './assert';
 
 
 /**
@@ -41,7 +43,7 @@ export const gettextFactory = ({
 
   // validate unless production
   if (NODE_ENV !== 'production') {
-    const message = `Error in gettext\`${msgid}\``;
+    const message = `gettext\`${msgid}\``;
     assertGettextInstance(gettext, 'gettext', message);
     assertTokens(tokens, message);
   }
@@ -99,25 +101,36 @@ export const ngettextFactory = ({
   splitPlural = defaultSplitPlural,
   numPlural = 2,
   NODE_ENV = process.env.NODE_ENV
-} = {}) => (...quantity) => (strings, ...substitutions) => {
-
-  // get a msgid template with sensible token names and split by the delimiter
-  const tokens = substitutions.map(toToken);
-  const msgid = getTemplate(strings, tokens);
-  const msgidForms = splitPlural(msgid);
+} = {}) => (...args) => {
+  const [quantity, ...unexpected] = args;
 
   // validate unless production
   if (NODE_ENV !== 'production') {
-    const message = `Error in ngettext(${quantity.map(String).join(', ')})\`${msgid}\``;
-    assertGettextInstance(gettext, 'ngettext', message);
-    assertTokens(tokens, message);
-    assertPluralForms(numPlural, msgidForms.length, message);
+    const outerMessage = `ngettext(${args.map(String).join(', ')})`;
+    assertGettextInstance(gettext, 'ngettext', outerMessage);
+    assertQuantity(quantity, outerMessage);
+    assertUnexpected(unexpected, outerMessage);
   }
 
-  // translate and make substitutions
-  //  we need to call from the gettext parent object in case ngettext() uses 'this'
-  const msgstr = gettext.ngettext(...msgidForms, ...quantity);
-  return makeSubstitutions({msgstr, tokens, finaliseToken});
+  return (strings, ...substitutions) => {
+
+    // get a msgid template with sensible token names and split by the delimiter
+    const tokens = substitutions.map(toToken);
+    const msgid = getTemplate(strings, tokens);
+    const msgidForms = splitPlural(msgid);
+
+    // validate unless production
+    if (NODE_ENV !== 'production') {
+      const innerMessage = `ngettext(${args.map(String).join(', ')})\`${msgid}\``;
+      assertTokens(tokens, innerMessage);
+      assertPluralForms(numPlural, msgidForms.length, innerMessage);
+    }
+
+    // translate and make substitutions
+    //  we need to call from the gettext parent object in case ngettext() uses 'this'
+    const msgstr = gettext.ngettext(...msgidForms, quantity);
+    return makeSubstitutions({msgstr, tokens, finaliseToken});
+  };
 };
 
 

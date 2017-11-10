@@ -5,7 +5,7 @@ import {check, gen} from 'tape-check';
 
 import {times} from './helpers';
 import {
-  anyPrimitive, anyUnkeyedComplexSubstitution,
+  anyPrimitive, anyValue, anyUnkeyedComplexSubstitution,
   anyKeyedPrimitiveSubstitutionKV, anyKeyedComplexSubstitutionKV,
   anyIllegalPrimitiveSubstitutionKV, anyIllegalComplexSubstitutionKV,
   genTokensWithDuplicateNames, genMixOfStringAndObjectSubstitutions
@@ -91,6 +91,80 @@ test('ngettext: mismatched template and number of plural forms', check(
 ));
 
 
+test('ngettext: non-integer invocation', check(
+  times(5),
+  gen.oneOf([
+    anyValue.suchThat(v => (typeof v !== 'number')),
+    gen.number.notEmpty().suchThat(v => (v % 1 !== 0)), /* avoid integers and NaN */
+  ]),
+  (t, n) => {
+    const {spy, gettext} = createSpy();
+    const devTemplate = ngettextFactory({NODE_ENV: 'development', gettext});
+
+    t.throws(
+      () => devTemplate(n)`singular|plural`,
+      /Expected an integer quantity/,
+      'should throw invalid quantity error in development env'
+    );
+    t.notOk(
+      spy.called,
+      'should throw before translation in development env'
+    );
+
+    const prodTemplate = ngettextFactory({NODE_ENV: 'production', gettext});
+
+    t.doesNotThrow(
+      () => prodTemplate(n)`singular|plural`,
+      'should not throw error in production env'
+    );
+    t.deepEqual(
+      spy.firstCall.args,
+      ['singular', 'plural', n],
+      'should pass invalid quantity to translation in production env'
+    );
+
+    t.end();
+  }
+));
+
+
+test('ngettext: invoked with additional arguments', check(
+  times(5),
+  gen.object({
+    head: gen.posInt,
+    rest: gen.array(anyValue, {minSize: 1})
+  }).then(({head, rest}) => [head, ...rest]),
+  (t, args) => {
+    const {spy, gettext} = createSpy();
+    const devTemplate = ngettextFactory({NODE_ENV: 'development', gettext});
+
+    t.throws(
+      () => devTemplate(...args)`singular|plural`,
+      /Expected no additional arguments/,
+      'should throw unexpected arguments error in development env'
+    );
+    t.notOk(
+      spy.called,
+      'should throw before translation in development env'
+    );
+
+    const prodTemplate = ngettextFactory({NODE_ENV: 'production', gettext});
+
+    t.doesNotThrow(
+      () => prodTemplate(...args)`singular|plural`,
+      'should not throw error in production env'
+    );
+    t.deepEqual(
+      spy.firstCall.args,
+      ['singular', 'plural', args[0]],
+      'should not pass additional arguments to translation in production env'
+    );
+
+    t.end();
+  }
+));
+
+
 test('ngettext: degenerate case without substitutions', check(
   times(5),
   gen.posInt,
@@ -146,7 +220,7 @@ test('ngettext: direct complex substitution', check(
 
     t.throws(
       () => devTemplate(n)`foo ${v1}|bar ${v2}`,
-      /Error in ngettext/,
+      /All non-primitive substitutions must be "keyed"/,
       'should throw error in development env'
     );
     t.notOk(
@@ -209,7 +283,7 @@ test('ngettext: illegally keyed primitive substitution', check(
 
     t.throws(
       () => devTemplate(n)`foo ${{[k1]: v1}}|bar ${{[k2]: v2}}`,
-      /Error in ngettext/,
+      /Keys must be alphanumeric/,
       'should throw error in development env'
     );
     t.notOk(
@@ -272,7 +346,7 @@ test('ngettext: illegally keyed complex substitution', check(
 
     t.throws(
       () => devTemplate(n)`foo ${{[k1]: v1}}|bar ${{[k2]: v2}}`,
-      /Error in ngettext/,
+      /Keys must be alphanumeric/,
       'should throw error in development env'
     );
     t.notOk(
@@ -335,7 +409,7 @@ test('ngettext: keyed substitution with duplicate names', check(
 
     t.throws(
       () => devTemplate(n)(strings, ...tokens),
-      /Error in ngettext/,
+      /All non-primitive substitutions must be "keyed"/,
       'should throw error in development env'
     );
     t.notOk(

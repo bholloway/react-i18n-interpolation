@@ -95,7 +95,7 @@ test('gettext: direct complex substitution', check(
 
     t.throws(
       () => devTemplate`foo ${v}`,
-      /Error in gettext/,
+      /All non-primitive substitutions must be "keyed"/,
       'should throw error in development env'
     );
     t.notOk(
@@ -156,7 +156,7 @@ test('gettext: illegally keyed primitive substitution', check(
 
     t.throws(
       () => devTemplate`foo ${{[k]: v}}`,
-      /Error in gettext/,
+      /Keys must be alphanumeric/,
       'should throw error in development env'
     );
     t.notOk(
@@ -217,7 +217,7 @@ test('gettext: illegally keyed complex substitution', check(
 
     t.throws(
       () => devTemplate`foo ${{[k]: v}}`,
-      /Error in gettext/,
+      /Keys must be alphanumeric/,
       'should throw error in development env'
     );
     t.notOk(
@@ -278,7 +278,7 @@ test('gettext: keyed substitution with duplicate names', check(
 
     t.throws(
       () => devTemplate(strings, ...tokens),
-      /Error in gettext/,
+      /All non-primitive substitutions must be "keyed"/,
       'should throw error in development env'
     );
     t.notOk(
