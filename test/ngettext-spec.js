@@ -92,7 +92,7 @@ test('ngettext: non-integer invocation', check(
   times(5),
   gen.oneOf([
     anyValue.suchThat(v => (typeof v !== 'number')),
-    gen.number.notEmpty().suchThat(v => (v % 1 !== 0)), /* avoid integers and NaN */
+    gen.numberWithin(-100, 100).suchThat(v => (v % 1 !== 0)), /* avoid integers and NaN */
   ]),
   (t, n) => {
     const {spy, gettext} = createSpy();
