@@ -14,7 +14,6 @@ export const getTemplate = (strings, tokens) => {
     .join('');
 };
 
-
 /**
  * Make substitutions back into the translated string.
  *

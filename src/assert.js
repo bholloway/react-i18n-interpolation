@@ -1,6 +1,5 @@
 import {calculateErrors, calculateCollisions} from './token';
 
-
 /**
  * Throw where the object[field] is not a function.
  *
@@ -17,6 +16,33 @@ export const assertGettextInstance = (obj, field, message) => {
   }
 };
 
+/**
+ * Throws where the candidate is not an integer.
+ *
+ * @throws Error on non integer
+ * @param {*} candidate Possible integer
+ * @param {string} message A title for the error
+ */
+export const assertQuantity = (candidate, message) => {
+  const isValid = (typeof candidate === 'number') && !isNaN(candidate) && (candidate % 1 === 0);
+  if (!isValid) {
+    throw new Error(`${message}: Expected an integer quantity`);
+  }
+};
+
+/**
+ * Throws where the candidate is not an empty list.
+ *
+ * @throws Error on non-empty list
+ * @param {Array} candidate List of additional arguments
+ * @param {string} message A title for the error
+ */
+export const assertUnexpected = (candidate, message) => {
+  const isValid = Array.isArray(candidate) && (candidate.length === 0);
+  if (!isValid) {
+    throw new Error(`${message}: Expected no additional arguments`);
+  }
+};
 
 /**
  * Throw on token problems.
@@ -37,7 +63,6 @@ export const assertTokens = (tokens, message) => {
       `${message}: substitution with the same name must have the same value: ${collisions}`);
   }
 };
-
 
 /**
  * Throw on incorrect number of plural forms.

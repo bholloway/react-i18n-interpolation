@@ -1,12 +1,13 @@
 {
   "extends": "airbnb",
   "rules": {
+    "no-multiple-empty-lines": ["error", {"max": 1}],
     "no-else-return": "off",
     "object-curly-spacing": "off",
     "comma-dangle": "off",
     "import/prefer-default-export": "off",
-    "import/no-extraneous-dependencies": ["error", { "devDependencies": true }],
-    "no-shadow": ["error", { "allow": ["describe", "it"] }],
+    "import/no-extraneous-dependencies": ["error", {"devDependencies": true}],
+    "no-shadow": ["error", {"allow": ["describe", "it"]}],
     "padded-blocks": "off",
     "no-mixed-operators": "off",
     "no-nested-ternary": "off",

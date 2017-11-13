@@ -6,7 +6,6 @@
  */
 export const defaultGettext = msgid => msgid;
 
-
 /**
  * Ngettext implementation that performs no translation.
  *
@@ -17,7 +16,6 @@ export const defaultGettext = msgid => msgid;
  */
 export const defaultNgettext = (singular, plural, quantity) =>
   ((typeof quantity !== 'number') || isNaN(quantity) || (quantity === 1) ? singular : plural);
-
 
 /**
  * Split template by a delimiter into multiple msgid forms.

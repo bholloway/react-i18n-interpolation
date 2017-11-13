@@ -3,16 +3,16 @@ import sinon from 'sinon';
 import React from 'react';
 import {check} from 'tape-check';
 
-import {times} from './helpers';
+import {times, requireSrc} from './helpers';
 import {
   anyPrimitive, anyUnkeyedComplexSubstitution,
   anyKeyedPrimitiveSubstitutionKV, anyKeyedComplexSubstitutionKV,
   anyIllegalPrimitiveSubstitutionKV, anyIllegalComplexSubstitutionKV,
   genTokensWithDuplicateNames, genMixOfStringAndObjectSubstitutions
 } from './generators';
-import {defaultGettext} from '../src/defaults';
-import {gettextFactory} from '../src/index';
 
+const {defaultGettext} = requireSrc('defaults');
+const {gettextFactory} = requireSrc('index');
 
 const createSpy = () => {
   const spy = sinon.spy();
@@ -23,7 +23,6 @@ const createSpy = () => {
 
   return {spy, gettext: {gettext}};
 };
-
 
 test('gettext: created with bad gettext instance', (t) => {
   const devTemplate = gettextFactory({NODE_ENV: 'development', gettext: {}});
@@ -45,7 +44,6 @@ test('gettext: created with bad gettext instance', (t) => {
   t.end();
 });
 
-
 test('gettext: degenerate case without substitutions', (t) => {
   const {spy, gettext} = createSpy();
   const template = gettextFactory({gettext});
@@ -62,7 +60,6 @@ test('gettext: degenerate case without substitutions', (t) => {
   );
   t.end();
 });
-
 
 test('gettext: direct primitive substitution', check(
   times(20),
@@ -85,7 +82,6 @@ test('gettext: direct primitive substitution', check(
   }
 ));
 
-
 test('gettext: direct complex substitution', check(
   times(20),
   anyUnkeyedComplexSubstitution,
@@ -95,7 +91,7 @@ test('gettext: direct complex substitution', check(
 
     t.throws(
       () => devTemplate`foo ${v}`,
-      /Error in gettext/,
+      /All non-primitive substitutions must be "keyed"/,
       'should throw error in development env'
     );
     t.notOk(
@@ -124,7 +120,6 @@ test('gettext: direct complex substitution', check(
   }
 ));
 
-
 test('gettext: keyed primitive substitution', check(
   times(20),
   anyKeyedPrimitiveSubstitutionKV,
@@ -146,7 +141,6 @@ test('gettext: keyed primitive substitution', check(
   }
 ));
 
-
 test('gettext: illegally keyed primitive substitution', check(
   times(10),
   anyIllegalPrimitiveSubstitutionKV,
@@ -156,7 +150,7 @@ test('gettext: illegally keyed primitive substitution', check(
 
     t.throws(
       () => devTemplate`foo ${{[k]: v}}`,
-      /Error in gettext/,
+      /Keys must be alphanumeric/,
       'should throw error in development env'
     );
     t.notOk(
@@ -185,7 +179,6 @@ test('gettext: illegally keyed primitive substitution', check(
   }
 ));
 
-
 test('gettext: keyed complex substitution', check(
   times(20),
   anyKeyedComplexSubstitutionKV,
@@ -207,7 +200,6 @@ test('gettext: keyed complex substitution', check(
   }
 ));
 
-
 test('gettext: illegally keyed complex substitution', check(
   times(10),
   anyIllegalComplexSubstitutionKV,
@@ -217,7 +209,7 @@ test('gettext: illegally keyed complex substitution', check(
 
     t.throws(
       () => devTemplate`foo ${{[k]: v}}`,
-      /Error in gettext/,
+      /Keys must be alphanumeric/,
       'should throw error in development env'
     );
     t.notOk(
@@ -246,7 +238,6 @@ test('gettext: illegally keyed complex substitution', check(
   }
 ));
 
-
 test('gettext: mix of keyed and non-keyed substitutions', check(
   times(20),
   genMixOfStringAndObjectSubstitutions({size: 3}),
@@ -267,7 +258,6 @@ test('gettext: mix of keyed and non-keyed substitutions', check(
   }
 ));
 
-
 test('gettext: keyed substitution with duplicate names', check(
   times(20),
   genTokensWithDuplicateNames, /* all tokens throw, but for some it is because they are unkeyed */
@@ -278,7 +268,7 @@ test('gettext: keyed substitution with duplicate names', check(
 
     t.throws(
       () => devTemplate(strings, ...tokens),
-      /Error in gettext/,
+      /All non-primitive substitutions must be "keyed"/,
       'should throw error in development env'
     );
     t.notOk(
@@ -295,7 +285,6 @@ test('gettext: keyed substitution with duplicate names', check(
     t.end();
   }
 ));
-
 
 test('gettext: keyed React element substitution', (t) => {
   const template = gettextFactory();

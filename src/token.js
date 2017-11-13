@@ -1,6 +1,5 @@
 import {isValidElement, cloneElement} from 'react';
 
-
 /**
  * Convert a substitution into a record.
  *
@@ -40,7 +39,6 @@ export const defaultToToken = (candidate, i) => {
   return {error, label, name, key, value};
 };
 
-
 /**
  * Convert a token into a final substitution value.
  *
@@ -56,7 +54,6 @@ export const defaultFinaliseToken = ({key, value}, i) =>
     cloneElement(value, {key: `${key}-${i}`}) :
     value);
 
-
 /**
  * Calculate a message for those tokens which indicated an error.
  *
@@ -68,7 +65,6 @@ export const calculateErrors = tokens =>
     .map(({error}) => error)
     .filter(Boolean)
     .filter((v, i, a) => (a.indexOf(v) === i));
-
 
 /**
  * Calculate a message for those tokens with a name collision.
