@@ -1,14 +1,14 @@
 import test from 'tape';
 import {check, gen} from 'tape-check';
 
-import {times, safeIsNaN} from './helpers';
+import {times, safeIsNaN, requireSrc} from './helpers';
 import {
   anyValue, anyNonEmptyAlphaNumericString,
   anyEnumerableInvalidKey, anyEnumerableWithMultipleKeys,
   genTokensWithDuplicateValues, genTokensWithDuplicateNames
 } from './generators';
 
-import {defaultToToken, calculateCollisions} from '../src/token';
+const {defaultToToken, calculateCollisions} = requireSrc('token');
 
 
 test('token parsing: direct substitutions or invalid keyed substitutions', check(

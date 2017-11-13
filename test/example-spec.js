@@ -5,10 +5,12 @@ import React from 'react';
 import {mount, shallow, configure} from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
 
-import {gettextDefault, ngettextDefault} from '../src/index';
+import {requireSrc} from './helpers';
 import {StrongText, AnchorText} from '../example/simple-inline';
 import {PaginationControl} from '../example/pagination-control';
 import {IncorrectUse, CorrectUse} from '../example/misuse';
+
+const {gettextDefault, ngettextDefault} = requireSrc('index');
 
 configure({adapter: new Adapter()});
 

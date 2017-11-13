@@ -3,15 +3,16 @@ import sinon from 'sinon';
 import React from 'react';
 import {check} from 'tape-check';
 
-import {times} from './helpers';
+import {times, requireSrc} from './helpers';
 import {
   anyPrimitive, anyUnkeyedComplexSubstitution,
   anyKeyedPrimitiveSubstitutionKV, anyKeyedComplexSubstitutionKV,
   anyIllegalPrimitiveSubstitutionKV, anyIllegalComplexSubstitutionKV,
   genTokensWithDuplicateNames, genMixOfStringAndObjectSubstitutions
 } from './generators';
-import {defaultGettext} from '../src/defaults';
-import {gettextFactory} from '../src/index';
+
+const {defaultGettext} = requireSrc('defaults');
+const {gettextFactory} = requireSrc('index');
 
 
 const createSpy = () => {
