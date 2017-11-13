@@ -1,6 +1,5 @@
 import {calculateErrors, calculateCollisions} from './token';
 
-
 /**
  * Throw where the object[field] is not a function.
  *
@@ -17,7 +16,6 @@ export const assertGettextInstance = (obj, field, message) => {
   }
 };
 
-
 /**
  * Throws where the candidate is not an integer.
  *
@@ -32,7 +30,6 @@ export const assertQuantity = (candidate, message) => {
   }
 };
 
-
 /**
  * Throws where the candidate is not an empty list.
  *
@@ -46,7 +43,6 @@ export const assertUnexpected = (candidate, message) => {
     throw new Error(`${message}: Expected no additional arguments`);
   }
 };
-
 
 /**
  * Throw on token problems.
@@ -67,7 +63,6 @@ export const assertTokens = (tokens, message) => {
       `${message}: substitution with the same name must have the same value: ${collisions}`);
   }
 };
-
 
 /**
  * Throw on incorrect number of plural forms.

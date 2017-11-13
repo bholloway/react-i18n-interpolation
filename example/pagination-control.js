@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-
 /**
  * This portion leads to underlying translation
  * 4. msgid  "one more"
@@ -16,7 +15,6 @@ More.propTypes = {
   onClick: PropTypes.func.isRequired
 };
 
-
 /**
  * This portion leads to underlying translation
  * 5. msgid  "one less"
@@ -30,7 +28,6 @@ Less.propTypes = {
   num: PropTypes.number.isRequired,
   onClick: PropTypes.func.isRequired
 };
-
 
 /**
  * Pagination control for progressively expanding to more items or then contract to fewer.

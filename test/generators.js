@@ -1,12 +1,10 @@
 import {gen} from 'tape-check';
 
-
 // testcheck has problems with uniqueness of undefined and null
 const undef = {};
 const nul = {};
 const uniqueFn = v =>
   ((v === undefined) ? undef : (v === null) ? nul : v);
-
 
 // exclude the default ngettext delimiter, subtitute it at your own peril
 export const anyPrimitive = gen.primitive
@@ -43,7 +41,6 @@ export const anyEnumerableWithMultipleKeys = gen.object({
   y: anyValue
 });
 
-
 /**
  * The set of values that don't have valid keys and are considered non-primitive
  * @type {Generator<any>}
@@ -55,7 +52,6 @@ export const anyUnkeyedComplexSubstitution = gen.oneOf([
   anyEnumerableWithMultipleKeys
 ]);
 
-
 /**
  * key-value pair of a single primitive value with a valid key
  * @type {Generator<any>}
@@ -64,7 +60,6 @@ export const anyKeyedPrimitiveSubstitutionKV = gen.object({
   k: anyNonEmptyAlphaNumericString,
   v: anyPrimitive
 });
-
 
 /**
  * key-value pair of a single non-primitive value with a valid key
@@ -75,7 +70,6 @@ export const anyKeyedComplexSubstitutionKV = gen.object({
   v: gen.oneOf([anySymbolOrFunctionRef, anyEmptyObjectOrArray])
 });
 
-
 /**
  * key-value pair of a single primitive value with an invalid key
  * @type {Generator<any>}
@@ -84,7 +78,6 @@ export const anyIllegalPrimitiveSubstitutionKV = gen.object({
   k: anyIllegalString.notEmpty(),
   v: anyPrimitive
 });
-
 
 /**
  * key-value pair of a single non-primitive value with an invalid key
@@ -95,14 +88,12 @@ export const anyIllegalComplexSubstitutionKV = gen.object({
   v: gen.oneOf([anySymbolOrFunctionRef, anyEmptyObjectOrArray])
 });
 
-
 /**
  * The set of substitutions which we expect to remain as separate elements in the final result
  * @type {Generator<any>}
  */
 export const anyObjectLikeSubstitution = anyKeyedComplexSubstitutionKV
   .then(({k, v}) => ({[k]: v}));
-
 
 /**
  * The set of substitutions which we expect to become strings in the final result
@@ -113,7 +104,6 @@ export const anyStringLikeSubstitution = gen.oneOf([
   anyUnkeyedComplexSubstitution,
   anyKeyedPrimitiveSubstitutionKV.then(({k, v}) => ({[k]: v}))
 ]);
-
 
 // pre-generate all the necessary elements to ensure they are unique
 const genUniqueTokens = ({minSize, maxSize}) =>
@@ -174,7 +164,6 @@ const createDuplicatesIn = field => ({uniqueTokens, groupedIndices, ...rest}) =>
   })
 });
 
-
 /**
  * Generator for between 2 and 9 tokens with some conflicting values.
  *
@@ -187,7 +176,6 @@ export const genTokensWithDuplicateValues =
   genUniqueTokens({minSize: 2, maxSize: 9})
     .then(genGroupedIndicesForTokens({maxGroups: 3}))
     .then(createDuplicatesIn('value'));
-
 
 /**
  * Generator for between 2 and 9 tokens with some conflicting names.
@@ -209,7 +197,6 @@ export const genTokensWithDuplicateNames =
         .map(({label}) => label)
       )
     }));
-
 
 /**
  * Generate a number of substitution values which might imply objects or strings in the final

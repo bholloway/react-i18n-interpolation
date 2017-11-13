@@ -5,7 +5,6 @@ import {
   assertGettextInstance, assertQuantity, assertUnexpected, assertTokens, assertPluralForms
 } from './assert';
 
-
 /**
  * Gettext as a tagged template string interpolator.
  *
@@ -53,7 +52,6 @@ export const gettextFactory = ({
   const msgstr = gettext.gettext(msgid);
   return makeSubstitutions({msgstr, tokens, finaliseToken});
 };
-
 
 /**
  * NGettext as a tagged template string interpolator.
@@ -133,7 +131,6 @@ export const ngettextFactory = ({
   };
 };
 
-
 /**
  * Create a hash of all methods using shared options.
  *
@@ -146,13 +143,11 @@ export const factory = options => ({
   ngettext: ngettextFactory(options)
 });
 
-
 /**
  * Gettext as a degenerate template string interpolator.
  * @type {*}
  */
 export const gettextDefault = gettextFactory();
-
 
 /**
  * NGettext as a degenerate template string interpolator.

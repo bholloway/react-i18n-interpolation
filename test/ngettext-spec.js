@@ -14,7 +14,6 @@ import {
 const {defaultNgettext} = requireSrc('defaults');
 const {ngettextFactory} = requireSrc('index');
 
-
 const createSpy = () => {
   const spy = sinon.spy();
   const ngettext = (...args) => {
@@ -24,7 +23,6 @@ const createSpy = () => {
 
   return {spy, gettext: {ngettext}};
 };
-
 
 test('gettext: created with bad gettext instance', (t) => {
   const devTemplate = ngettextFactory({NODE_ENV: 'development', gettext: {}});
@@ -45,7 +43,6 @@ test('gettext: created with bad gettext instance', (t) => {
 
   t.end();
 });
-
 
 const genMismatchedTemplateStrings = ({numForms}) =>
   gen.posInt
@@ -91,7 +88,6 @@ test('ngettext: mismatched template and number of plural forms', check(
   }
 ));
 
-
 test('ngettext: non-integer invocation', check(
   times(5),
   gen.oneOf([
@@ -127,7 +123,6 @@ test('ngettext: non-integer invocation', check(
     t.end();
   }
 ));
-
 
 test('ngettext: invoked with additional arguments', check(
   times(5),
@@ -165,7 +160,6 @@ test('ngettext: invoked with additional arguments', check(
   }
 ));
 
-
 test('ngettext: degenerate case without substitutions', check(
   times(5),
   gen.posInt,
@@ -186,7 +180,6 @@ test('ngettext: degenerate case without substitutions', check(
     t.end();
   }
 ));
-
 
 test('ngettext: direct primitive substitution', check(
   times(20),
@@ -209,7 +202,6 @@ test('ngettext: direct primitive substitution', check(
     t.end();
   }
 ));
-
 
 test('ngettext: direct complex substitution', check(
   times(20),
@@ -250,7 +242,6 @@ test('ngettext: direct complex substitution', check(
   }
 ));
 
-
 test('ngettext: keyed primitive substitution', check(
   times(20),
   gen.posInt,
@@ -272,7 +263,6 @@ test('ngettext: keyed primitive substitution', check(
     t.end();
   }
 ));
-
 
 test('ngettext: illegally keyed primitive substitution', check(
   times(10),
@@ -313,7 +303,6 @@ test('ngettext: illegally keyed primitive substitution', check(
   }
 ));
 
-
 test('ngettext: keyed complex substitution', check(
   times(20),
   gen.posInt,
@@ -335,7 +324,6 @@ test('ngettext: keyed complex substitution', check(
     t.end();
   }
 ));
-
 
 test('ngettext: illegally keyed complex substitution', check(
   times(10),
@@ -376,7 +364,6 @@ test('ngettext: illegally keyed complex substitution', check(
   }
 ));
 
-
 test('ngettext: mix of keyed and non-keyed substitutions', check(
   times(20),
   gen.posInt,
@@ -397,7 +384,6 @@ test('ngettext: mix of keyed and non-keyed substitutions', check(
     t.end();
   }
 ));
-
 
 test('ngettext: keyed substitution with duplicate names', check(
   times(20),
@@ -427,7 +413,6 @@ test('ngettext: keyed substitution with duplicate names', check(
     t.end();
   }
 ));
-
 
 test('ngettext: keyed React element substitution', (t) => {
   const template = ngettextFactory();

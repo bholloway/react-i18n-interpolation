@@ -14,7 +14,6 @@ import {
 const {defaultGettext} = requireSrc('defaults');
 const {gettextFactory} = requireSrc('index');
 
-
 const createSpy = () => {
   const spy = sinon.spy();
   const gettext = (...args) => {
@@ -24,7 +23,6 @@ const createSpy = () => {
 
   return {spy, gettext: {gettext}};
 };
-
 
 test('gettext: created with bad gettext instance', (t) => {
   const devTemplate = gettextFactory({NODE_ENV: 'development', gettext: {}});
@@ -46,7 +44,6 @@ test('gettext: created with bad gettext instance', (t) => {
   t.end();
 });
 
-
 test('gettext: degenerate case without substitutions', (t) => {
   const {spy, gettext} = createSpy();
   const template = gettextFactory({gettext});
@@ -63,7 +60,6 @@ test('gettext: degenerate case without substitutions', (t) => {
   );
   t.end();
 });
-
 
 test('gettext: direct primitive substitution', check(
   times(20),
@@ -85,7 +81,6 @@ test('gettext: direct primitive substitution', check(
     t.end();
   }
 ));
-
 
 test('gettext: direct complex substitution', check(
   times(20),
@@ -125,7 +120,6 @@ test('gettext: direct complex substitution', check(
   }
 ));
 
-
 test('gettext: keyed primitive substitution', check(
   times(20),
   anyKeyedPrimitiveSubstitutionKV,
@@ -146,7 +140,6 @@ test('gettext: keyed primitive substitution', check(
     t.end();
   }
 ));
-
 
 test('gettext: illegally keyed primitive substitution', check(
   times(10),
@@ -186,7 +179,6 @@ test('gettext: illegally keyed primitive substitution', check(
   }
 ));
 
-
 test('gettext: keyed complex substitution', check(
   times(20),
   anyKeyedComplexSubstitutionKV,
@@ -207,7 +199,6 @@ test('gettext: keyed complex substitution', check(
     t.end();
   }
 ));
-
 
 test('gettext: illegally keyed complex substitution', check(
   times(10),
@@ -247,7 +238,6 @@ test('gettext: illegally keyed complex substitution', check(
   }
 ));
 
-
 test('gettext: mix of keyed and non-keyed substitutions', check(
   times(20),
   genMixOfStringAndObjectSubstitutions({size: 3}),
@@ -267,7 +257,6 @@ test('gettext: mix of keyed and non-keyed substitutions', check(
     t.end();
   }
 ));
-
 
 test('gettext: keyed substitution with duplicate names', check(
   times(20),
@@ -296,7 +285,6 @@ test('gettext: keyed substitution with duplicate names', check(
     t.end();
   }
 ));
-
 
 test('gettext: keyed React element substitution', (t) => {
   const template = gettextFactory();
