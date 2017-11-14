@@ -4,6 +4,32 @@ String interpolation of translated text and React components.
 
 Intended for [gettext](https://www.npmjs.com/search?q=gettext) or similar translation APIs (where the key is the intended text in the developer's locale).
 
+## TLDR
+
+`gettext`
+
+Simple:
+
+```js
+gettext`foo`
+```
+
+key/val:
+
+```js
+gettext`Welcome to ${{location: 'hell'}}`
+```
+
+`ngettext`
+
+```js
+ngettext(world)`Hello world|Hello worlds!`
+```
+
+```js
+ngettext(daysLeft)`${{daysLeft}} day to go!|${daysLeft} days to go!`
+```
+
 ## Concept
 
 ### Tagged Template Literals
@@ -128,7 +154,7 @@ import {factory} from 'react-i18-interpolation';
 const nodeGettext = new NodeGettext();
 nodeGettext.addTextdomain(...);
 nodeGettext.textdomain(...);
-  
+
 const {gettext, ngettext} = factory({gettext: nodeGettext});
 ```
 
@@ -160,8 +186,8 @@ It behaves as explained in the [concept section](#concept) above.
 The plural-capable interpolator is `ngettext`.
 
 Normally the quantity is the 3rd parameter, meaning:
- 
-**(Tranditionally)**
+
+**(Traditionally)**
 ```
 ngettext(singular:string, plural:string, quantity:number)
 ```
@@ -268,7 +294,7 @@ All implementations must return the following:
 * `key : string` the hash key of the substitution, if present.
 * `value : *` the value from the substitution.
 
-Validation of the tokens is made following `toToken`. Tokens may only share `name` where they have the same `value`. 
+Validation of the tokens is made following `toToken`. Tokens may only share `name` where they have the same `value`.
 
 ### `finaliseToken : function`
 
