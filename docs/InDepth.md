@@ -1,5 +1,9 @@
 ## Concept
 
+The API is heavily influenced by [gettext](https://en.wikipedia.org/wiki/Gettext) translation package.
+
+We may make reference to linux documentation and terminology from the GNU implementation.
+
 ### Tagged Template Literals
 
 This library leverages [Tagged Template Literals](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Template_literals#Tagged_template_literals) interpolation functions.

@@ -8,29 +8,32 @@ Intended for [gettext](https://www.npmjs.com/search?q=gettext) or similar transl
 
 - Two functions
   - `gettext`
-    - Simple translation with language strng as lookupkey
+    - Simple translation with template string as translation lookup key
   - `ngettext`
-    - Singular/Plural aware translation with language strng as lookupkey
+    - Singular/Plural aware translation with template string as translation lookup key
 - Two ways of invoking
-  - simple values
-    - The argument/string is used as the lookup id
-  - object
-    - The key is used as the lookup id
+  - direct substitutions (simple values)
+    - Immediately substituted, same as normal template literals.
+    - Occurs **before** translation.
+    - Only permitted for primitives `string`, `number`, `boolean`, etc.
+  - object substitutions (single `key`/`value`)
+    - The `key` gives your translator context (and needs to survive translation).
+    - The `value` is substituted after **translation**.
 ### `gettext`
 
-Simple Values:
+- Without Substitution:
 
 ```js
 gettext`foo`
 ```
 
-key/val:
+- With Substitution:
 
 ```js
-gettext`Welcome to ${{location: 'hell'}}`
+gettext`Welcome to ${{location: 'Jurassic Park'}}`
 ```
 
-jsx (nested call):
+- jsx:
 
 ```js
 gettext`For more ${{link: <a href="http://google.com">{gettext`information`}</a>}}`
@@ -38,18 +41,18 @@ gettext`For more ${{link: <a href="http://google.com">{gettext`information`}</a>
 
 ### `ngettext`
 
-- simple value:
+- Without Substitution:
 
 ```js
 ngettext(planets)`Hello world!|Hello worlds!`
 ```
 |   | input | output |
 |---|----|----|
-| **singular** | planets <= 1  | "Hello World!"  |
-| **plural**   | otherwise     | "Hello Worlds!" |
+| **singular** | `planets === 1`  | "Hello World!"  |
+| **plural**   | `planets > 1`    | "Hello Worlds!" |
 <!-- Basic logic: If `planets > 1`  return "Hello world" otherwise -->
 
-- Object:
+- With Substitution:
 
 ```js
 ngettext(daysLeft)`Only one day to go!|${{daysLeft}} days to go!`
@@ -57,11 +60,12 @@ ngettext(daysLeft)`Only one day to go!|${{daysLeft}} days to go!`
 
 |   | input | output |
 |---|----|----|
-| **singular** | `{daysLeft: 1}`  | "Only one day to go!"  |
-| **plural**   | `{daysLeft: 9}`  | "9 days to go!" |
+| **singular** | `daysLeft === 1`  | "Only one day to go!"  |
+| **plural**   | `daysLeft > 1`    | "9 days to go!"        |
 
+### In Greater Depth
 
-For more details on usage and the projects motivation see [this documentation](docs/InDepth.md) or check out the examples directory.
+For a more detailed examination of usage, the projects motivation and other options see [this documentation](docs/InDepth.md) or check out the examples directory.
 
 ## Installation
 
