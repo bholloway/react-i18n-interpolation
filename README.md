@@ -46,22 +46,21 @@ gettext`For more ${{link: <a href="http://google.com">{gettext`information`}</a>
 ```js
 ngettext(planets)`Hello world!|Hello worlds!`
 ```
-|   | input | output |
-|---|----|----|
-| **singular** | `planets === 1`  | "Hello World!"  |
-| **plural**   | `planets > 1`    | "Hello Worlds!" |
-<!-- Basic logic: If `planets > 1`  return "Hello world" otherwise -->
+|               | input             | output          |
+|---------------|-------------------|-----------------|
+| **singular**  | `planets === 1`   | "Hello World!"  |
+| **plural**    | `otherwise`       | "Hello Worlds!" |
 
 - With Substitution:
 
 ```js
-ngettext(daysLeft)`Only one day to go!|${{daysLeft}} days to go!`
+ngettext(days)`Only one day to go!|${{daysLeft: days}} days to go!`
 ```
 
-|   | input | output |
-|---|----|----|
-| **singular** | `daysLeft === 1`  | "Only one day to go!"  |
-| **plural**   | `daysLeft > 1`    | "9 days to go!"        |
+|               | input           | output                  |
+|---------------|-----------------|-------------------------|
+| **singular**  | `days === 1`    | "Only one day to go!"   |
+| **plural**    | `days === 9`    | "9 days to go!"         |
 
 ### In Greater Depth
 
